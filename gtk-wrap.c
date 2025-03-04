@@ -41,7 +41,8 @@ char *fpipein = NULL;
 
 void on_window_destroy(GObject *object, gpointer user_data){
     if(VERBOSE)
-        fprintf(stderr, "Caught destroy signal from main widget!\nQuitting...\n");
+        fprintf(stderr, "Caught destroy signal from main widget!\n"
+                        "Quitting...\n");
 
     RUNNING = 0;
     gtk_main_quit();
@@ -66,7 +67,7 @@ void *reader_loop(void* wojd){
 
 
     mkfifo(fpipein, S_IRWXU);
-    FILE *filein = fopen(fpipein, "r+");    
+    FILE *filein = fopen(fpipein, "r+");
     if(!filein){
         fprintf(stderr, "Error opening pipe %s !\n", fpipein);
         pthread_exit(NULL);
@@ -76,7 +77,7 @@ void *reader_loop(void* wojd){
         fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout, fpipein);
 
 
-    char input[1024]; 
+    char input[1024];
     char *operanda = NULL;
     char *object = NULL;
     char *command = NULL;
@@ -86,7 +87,7 @@ void *reader_loop(void* wojd){
         fgets(input, 1024, filein);
 
         if(!RUNNING)
-            break; 
+            break;
 
         object = input;
         command = input;
@@ -104,20 +105,20 @@ void *reader_loop(void* wojd){
 
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
-  
+
         GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(builder, object));
-        
- 
+
+
         //window set title
         if(!strcmp(command, "set_window_title")){
             gtk_window_set_title(GTK_WINDOW(widget), operanda);
         } else
-        
+
         //window show
         if(!strcmp(command, "show")){
             gtk_widget_show(widget);
         } else
-        
+
         //window hide
         if(!strcmp(command, "hide")){
             gtk_widget_hide(widget);
@@ -126,28 +127,27 @@ void *reader_loop(void* wojd){
 
         //textview set text
         if(!strcmp(command, "set_textview_text")){
-            gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1); 
+            gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1);
         } else
 
-        //textview get text 
+        //textview get text
         if(!strcmp(command, "get_textview_text")){
             GtkTextIter a, b;
-            GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)); 
+            GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
             gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
             gtk_text_buffer_get_iter_at_offset(buffer, &b, -1);
             gchar* mtext = gtk_text_buffer_get_text(buffer, &a, &b, FALSE);
-            fprintf(fileout, "%s\n", mtext);  
+            fprintf(fileout, "%s\n", mtext);
             fflush(fileout);
         } else
-        //
 
         //spinner activate/deactivate
         if(!strcmp(command, "spinner_start")){
-            gtk_spinner_start(GTK_SPINNER(widget)); 
+            gtk_spinner_start(GTK_SPINNER(widget));
         } else
 
         if(!strcmp(command, "spinner_stop")){
-            gtk_spinner_stop(GTK_SPINNER(widget)); 
+            gtk_spinner_stop(GTK_SPINNER(widget));
         } else
 
         //label set/get
@@ -163,23 +163,23 @@ void *reader_loop(void* wojd){
         //entrytext set/get
         if(!strcmp(command, "get_entry_text")){
             gchar* mtext = gtk_editable_get_chars(GTK_EDITABLE(widget), 0, -1);
-            fprintf(fileout, "%s\n", mtext);  
+            fprintf(fileout, "%s\n", mtext);
             fflush(fileout);
         } else
-        
+
         if(!strcmp(command, "set_entry_text")){
             gtk_entry_set_text(GTK_ENTRY(widget), operanda);
         } else
 
 
-        //combobox add options, get/set selected 
+        //combobox add options, get/set selected
         if(!strcmp(command, "set_combobox_items")){
             //GtkTreeModel *tree_model;
             //gtk_combo_box_model_set(GTK_COMBO_BOX(widget), tree_model);
-
         } else
+
         if(!strcmp(command, "get_selected_combobox_item")){
-            fprintf(fileout, "%d\n", gtk_combo_box_get_active(GTK_COMBO_BOX(widget)));  
+            fprintf(fileout, "%d\n", gtk_combo_box_get_active(GTK_COMBO_BOX(widget)));
             fflush(fileout);
         } else
 
@@ -191,10 +191,9 @@ void *reader_loop(void* wojd){
 
         //progressbar set, show/hide
         if(!strcmp(command, "set_progressbar")){
-
         } else
 
-        //togglebutton istoggled //toggle, check, radio button 
+        //togglebutton istoggled //toggle, check, radio button
         if(!strcmp(command, "get_button_state")){
             if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
                 fprintf(fileout, "1\n");
@@ -223,14 +222,14 @@ void auto_add_signals(char *filename, GtkBuilder *builder){
     char sighandler[STRING_SIZE];
     char *a;
     int hand_count = 0;
-    
+
 
     SIG_HANDLERS = (char**)calloc(50, sizeof(char*));
     if(!SIG_HANDLERS){
         fprintf(stderr, "Error allocating memory: SIG_HANDLERS!\n");
         return;
     }
-    
+
     if(!file){
         fprintf(stderr, "Couldn't open file %s, no signals will be auto-handled!\n", filename);
         return;
@@ -238,11 +237,11 @@ void auto_add_signals(char *filename, GtkBuilder *builder){
         while(!feof(file)){
 
             fgets(line, STRING_SIZE, file);
-            
+
                 if((a = strstr(line, OBJECT_TAG)) != NULL){
 
-                    a += strlen(OBJECT_TAG);  
-                
+                    a += strlen(OBJECT_TAG);
+
                     int i = 0;
                     for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
                         objclass[i] = *a++;
@@ -255,9 +254,9 @@ void auto_add_signals(char *filename, GtkBuilder *builder){
                         objname[i] = *a++;
 
                     objname[i] = '\0';
-                
-                    continue;        
-                }            
+
+                    continue;
+                }
 
                 if ((a = strstr(line, SIGNAL_TAG)) != NULL)
                 {
@@ -266,7 +265,7 @@ void auto_add_signals(char *filename, GtkBuilder *builder){
                     int i = 0;
                     for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
                         signame[i] = *a++;
-                    
+
                     signame[i] = '\0';
 
                     a += strlen(HANDLER_TAG);
@@ -292,12 +291,22 @@ void auto_add_signals(char *filename, GtkBuilder *builder){
 
         SIG_HANDLERS[hand_count] = NULL;
 
-   fclose(file); 
+   fclose(file);
 }
 
 void usage(){
-    fprintf(stderr, "Usage:\n%s \n\nOptions:\n-f project.glade\n-m OBJECTNAME \t\t Set object as a main window. Default \"window1\".\n-v \t\t\t Be more verbose.\n-i INPIPENAME \t\t Use pipe for comands instead of standard input.\n-o OUTPIPE \t\t Use pipe for commands output.\n", appname);
-    
+    fprintf(stderr,
+        "Usage:\n"
+        "%s \n"
+        "\n"
+        "Options:\n"
+        "-f project.glade\n"
+        "-m OBJECTNAME \t\t Set object as a main window. Default \"window1\".\n"
+        "-v \t\t\t Be more verbose.\n"
+        "-i INPIPENAME \t\t Use pipe for commands instead of standard input.\n"
+        "-o OUTPIPE \t\t Use pipe for commands output.\n"
+    , appname);
+
     exit(1);
 }
 
@@ -339,12 +348,12 @@ int main(int argc, char *argv[])
                     if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
                         fpipein = argv[++argn];
                     continue;
-                
+
                 //read ui from GtkBuilder(Glade) file
                 case 'f':
                     if(filename != NULL)
                         usage();
-                    
+
                     if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
                         filename = argv[++argn];
                     continue;
@@ -354,7 +363,7 @@ int main(int argc, char *argv[])
                     break;
             }
         }
-        break;   
+        break;
     }
 
     if(!filename)
@@ -369,7 +378,7 @@ int main(int argc, char *argv[])
     argv = &argv[argn];
     argc -= argn;
 
-    gtk_init(&argc, &argv);    
+    gtk_init(&argc, &argv);
 
     builder = gtk_builder_new();
 
@@ -383,10 +392,10 @@ int main(int argc, char *argv[])
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, main_object));
 
-    //Adding default closing signal 
-    g_signal_connect_swapped(window, "destroy", G_CALLBACK(on_window_destroy), NULL);    
+    //Adding default closing signal
+    g_signal_connect_swapped(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
 
-    //Adding other signals 
+    //Adding other signals
     auto_add_signals(filename, builder);
 
     gtk_widget_show(window);
@@ -398,7 +407,7 @@ int main(int argc, char *argv[])
         pthread_create(&thread, NULL, reader_loop, NULL);
 
     gtk_main();
-    
+
     RUNNING = 0;
 
     if(fpipeout)
