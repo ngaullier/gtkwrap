@@ -71,7 +71,7 @@
                 <property name="use-action-appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_Plik</property>
+                <property name="label" translatable="yes">_File</property>
                 <property name="use-underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="menu1">
@@ -143,7 +143,7 @@
                 <property name="use-action-appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_Edycja</property>
+                <property name="label" translatable="yes">_Edit</property>
                 <property name="use-underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="menu2">
@@ -198,7 +198,7 @@
                 <property name="use-action-appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_Widok</property>
+                <property name="label" translatable="yes">_View</property>
                 <property name="use-underline">True</property>
               </object>
             </child>
@@ -207,7 +207,7 @@
                 <property name="use-action-appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Pomo_c</property>
+                <property name="label" translatable="yes">_Help</property>
                 <property name="use-underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="menu3">
