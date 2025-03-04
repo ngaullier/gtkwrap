@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
 <interface>
-  <requires lib="gtk+" version="2.24"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.0"/>
   <object class="GtkWindow" id="window1">
-    <property name="width_request">300</property>
-    <property name="height_request">300</property>
-    <property name="can_focus">False</property>
+    <property name="width-request">300</property>
+    <property name="height-request">300</property>
+    <property name="can-focus">False</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <child>
           <object class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can-focus">False</property>
             <child>
               <object class="GtkTextView" id="textview1">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="pixels_above_lines">2</property>
-                <property name="pixels_below_lines">3</property>
-                <property name="pixels_inside_wrap">3</property>
-                <property name="left_margin">4</property>
-                <property name="right_margin">5</property>
+                <property name="can-focus">True</property>
+                <property name="pixels-above-lines">2</property>
+                <property name="pixels-below-lines">3</property>
+                <property name="pixels-inside-wrap">3</property>
+                <property name="left-margin">4</property>
+                <property name="right-margin">5</property>
                 <property name="indent">4</property>
               </object>
               <packing>
@@ -35,7 +35,7 @@
             <child>
               <object class="GtkTextView" id="textview2">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can-focus">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -54,10 +54,10 @@
         <child>
           <object class="GtkButton" id="button1">
             <property name="label" translatable="yes">+</property>
-            <property name="use_action_appearance">False</property>
+            <property name="use-action-appearance">False</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
             <signal name="clicked" handler="on_button1_clicked" swapped="no"/>
           </object>
           <packing>
@@ -69,7 +69,7 @@
         <child>
           <object class="GtkTextView" id="textview3">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
+            <property name="can-focus">True</property>
           </object>
           <packing>
             <property name="expand">True</property>
