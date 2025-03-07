@@ -79,30 +79,31 @@ void *reader_loop(void* wojd){
 
     char input[1024];
     char *operanda = NULL;
+    char *delims_field = " \n";
+    char *delims_eol = "\n";
+    char *next_token;
+    char *undefined = "";
     char *object = NULL;
     char *command = NULL;
 
 
     while(RUNNING){
-        fgets(input, 1024, filein);
+        if (!fgets(input, 1024, filein))
+            break;
 
         if(!RUNNING)
             break;
 
-        object = input;
-        command = input;
-        operanda = input;
-
-        while(*command && *command != ' ')
-            command++;
-
-        *command = '\0';
-        operanda = ++command;
-
-        while(*operanda && *operanda != ' ')
-            operanda++;
-        *operanda++ = '\0';
-
+        if (!(object = strtok_r(input, delims_field, &next_token))) {
+            object = command = operanda = undefined;
+        } else {
+            if (!(command = strtok_r(NULL, delims_field, &next_token))) {
+                command = operanda = undefined;
+            } else {
+                if (!(operanda = strtok_r(NULL, delims_eol, &next_token)))
+                    operanda = undefined;
+            }
+        }
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
 
