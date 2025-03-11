@@ -18,21 +18,17 @@
 #include <pthread.h>
 #include <gtk/gtk.h>
 #include <unistd.h>
-
+#include <assert.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 #define STRING_SIZE (64*1024)
-
-//"parsing" patterns for glade xml
-//do wypierdolenia!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#define OBJECT_TAG "<object class=\""
-#define SIGNAL_TAG "<signal name=\""
-#define ID_TAG "\" id=\""
-#define HANDLER_TAG "\" handler=\""
 
 short VERBOSE = 0;
 short RUNNING = 1;
 char *appname;
-char **SIG_HANDLERS;
 GtkBuilder *builder;
 char *fpipeout = NULL;
 char *fpipein = NULL;
@@ -212,87 +208,54 @@ void *reader_loop(void* wojd){
 }
 
 //Adding signals handled in glade file
-//TODO: make less dumb, replace by real xml parser
-void auto_add_signals(char *filename, GtkBuilder *builder){
+void auto_add_signals(xmlXPathContextPtr glade_xml) {
+    xmlXPathObjectPtr xpath_obj;
+    xmlNodeSetPtr nodes;
+    int i, count;
 
-    FILE *file = fopen(filename, "r");
-    char line[STRING_SIZE];
-    char objclass[STRING_SIZE];
-    char objname[STRING_SIZE];
-    char signame[STRING_SIZE];
-    char sighandler[STRING_SIZE];
-    char *a;
-    int hand_count = 0;
+    xpath_obj = xmlXPathEvalExpression((const xmlChar *)"//object[@id]/signal[@handler][@name]", glade_xml);
+    assert(xpath_obj != NULL);
 
-
-    SIG_HANDLERS = (char**)calloc(50, sizeof(char*));
-    if(!SIG_HANDLERS){
-        fprintf(stderr, "Error allocating memory: SIG_HANDLERS!\n");
-        return;
+    nodes = xpath_obj->nodesetval;
+    count = (nodes) ? nodes->nodeNr : 0;
+    for(i = 0; i < count; i++) {
+        xmlNodePtr node_signal = nodes->nodeTab[i];
+        xmlNodePtr node_object = nodes->nodeTab[i]->parent;
+        char *objname = (char *)xmlGetProp(node_object, (const xmlChar *)"id");
+        char *signame = (char *)xmlGetProp(node_signal, (const xmlChar *)"name");
+        char *sighandler = (char *)xmlGetProp(node_signal, (const xmlChar *)"handler");
+        assert(objname != NULL && signame != NULL && sighandler != NULL);
+        if (VERBOSE)
+            fprintf(stderr, "Found signal \"%s\", handled by \"%s\" in object \"%s\"\n", signame, sighandler, objname);
+        GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object( builder, objname));
+        g_signal_connect_swapped(widget, signame, G_CALLBACK(signal_handler), sighandler);
     }
 
-    if(!file){
-        fprintf(stderr, "Couldn't open file %s, no signals will be auto-handled!\n", filename);
-        return;
+    xmlXPathFreeObject(xpath_obj);
+}
+
+
+int parse_glade(const char *filename, GtkBuilder *builder) {
+    xmlDocPtr glade_file;
+    xmlXPathContextPtr glade_xml;
+
+    glade_file = xmlReadFile(filename, NULL, 0);
+    if (!glade_file) {
+        fprintf(stderr, "Failed to parse %s\n", filename);
+        return 1;
     }
-        while(!feof(file)){
 
-            fgets(line, STRING_SIZE, file);
+    glade_xml = xmlXPathNewContext(glade_file);
+    if (!glade_xml) {
+        xmlFreeDoc(glade_file);
+        return 1;
+    }
 
-                if((a = strstr(line, OBJECT_TAG)) != NULL){
+    auto_add_signals(glade_xml);
 
-                    a += strlen(OBJECT_TAG);
-
-                    int i = 0;
-                    for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
-                        objclass[i] = *a++;
-
-                    objclass[i] = '\0';
-
-                    a += strlen(ID_TAG);
-
-                    for ( i = 0; i < STRING_SIZE - 1 && *a != '\"'; i++)
-                        objname[i] = *a++;
-
-                    objname[i] = '\0';
-
-                    continue;
-                }
-
-                if ((a = strstr(line, SIGNAL_TAG)) != NULL)
-                {
-                    a += strlen(SIGNAL_TAG);
-
-                    int i = 0;
-                    for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
-                        signame[i] = *a++;
-
-                    signame[i] = '\0';
-
-                    a += strlen(HANDLER_TAG);
-
-                    for(i = 0; i < STRING_SIZE - 1 && *a != '\"'; i++)
-                        sighandler[i] = *a++;
-
-                    sighandler[i] = '\0';
-
-                    if(VERBOSE)
-                        fprintf(stderr, "Found signal \"%s\", handled by \"%s\" in object \"%s\" (%s)\n", signame, sighandler, objname, objclass);
-
-                    SIG_HANDLERS[hand_count] = (char*)calloc(strlen(sighandler) + 1, sizeof(char));
-                    strncpy(SIG_HANDLERS[hand_count], sighandler, strlen(sighandler));
-
-                    GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object( builder, objname));
-                    g_signal_connect_swapped(widget, signame, G_CALLBACK(signal_handler), SIG_HANDLERS[hand_count]);
-
-                    hand_count++;
-                    continue;
-                  }
-         }
-
-        SIG_HANDLERS[hand_count] = NULL;
-
-   fclose(file);
+    xmlXPathFreeContext(glade_xml);
+    xmlFreeDoc(glade_file);
+    return 0;
 }
 
 void usage(){
@@ -316,6 +279,15 @@ int main(int argc, char *argv[])
     char *filename = NULL;
     char *main_object = (char*)"window1";
     int argn;
+    int ret = 0;
+    pthread_t thread = 0;
+
+    /*
+     * this initialize the library and check potential ABI mismatches
+     * between the version it was compiled for and the actual shared
+     * library used.
+     */
+    LIBXML_TEST_VERSION
 
     appname = argv[0];
 
@@ -397,21 +369,21 @@ int main(int argc, char *argv[])
     g_signal_connect_swapped(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
 
     //Adding other signals
-    auto_add_signals(filename, builder);
+    if ((ret = parse_glade(filename, builder)) != 0)
+        goto end;
 
     gtk_widget_show(window);
 
     //starting command reader
-    pthread_t thread;
-
     if(fpipeout)
         pthread_create(&thread, NULL, reader_loop, NULL);
 
     gtk_main();
 
+end:
     RUNNING = 0;
 
-    if(fpipeout)
+    if(fpipeout && thread)
         pthread_cancel(thread);
 
     g_object_unref(G_OBJECT(builder));
@@ -419,13 +391,8 @@ int main(int argc, char *argv[])
     if(VERBOSE)
         fprintf(stderr, "Cleaning...\n");
 
-    char **tmp = SIG_HANDLERS;
-    while(*tmp)
-        free(*tmp++);
-    free(SIG_HANDLERS);
-
     unlink(fpipeout);
     unlink(fpipein);
 
-    return 0;
+    return ret;
 }
