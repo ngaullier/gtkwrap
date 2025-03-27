@@ -438,7 +438,7 @@ void auto_add_signals(xmlXPathContextPtr glade_xml) {
 }
 
 
-int parse_glade(const char *filename, GtkBuilder *builder) {
+int parse_glade(const char *filename) {
     xmlDocPtr glade_file;
     xmlXPathContextPtr glade_xml;
 
@@ -587,7 +587,7 @@ int main(int argc, char *argv[])
     g_signal_connect_swapped(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
 
     //Adding other signals
-    if ((ret = parse_glade(filename, builder)) != 0)
+    if ((ret = parse_glade(filename)) != 0)
         goto end;
 
     gtk_widget_show(GTK_WIDGET(window));
