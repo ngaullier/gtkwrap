@@ -64,12 +64,12 @@ void *reader_loop(void* wojd){
     char *operanda;
 
     if (fpipeout) {
-    mkfifo(fpipeout, S_IRWXU);
-    fileout = fopen(fpipeout, "a+");
-    if(!fileout){
-        fprintf(stderr, "Error opening pipe %s !\n", fpipeout);
-        pthread_exit(NULL);
-    }
+        mkfifo(fpipeout, S_IRWXU);
+        fileout = fopen(fpipeout, "a+");
+        if(!fileout){
+            fprintf(stderr, "Error opening pipe %s !\n", fpipeout);
+            pthread_exit(NULL);
+        }
     } else fileout = stdout;
 
     mkfifo(fpipein, S_IRWXU);
@@ -204,8 +204,8 @@ void *reader_loop(void* wojd){
 
     fclose(filein);
     if (fpipeout) {
-    fflush(fileout);
-    fclose(fileout);
+        fflush(fileout);
+        fclose(fileout);
     }
     pthread_exit(NULL);
 }
