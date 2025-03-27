@@ -63,13 +63,14 @@ void *reader_loop(void* wojd){
     char *command;
     char *operanda;
 
+    if (fpipeout) {
     mkfifo(fpipeout, S_IRWXU);
     fileout = fopen(fpipeout, "a+");
     if(!fileout){
         fprintf(stderr, "Error opening pipe %s !\n", fpipeout);
         pthread_exit(NULL);
     }
-
+    } else fileout = stdout;
 
     mkfifo(fpipein, S_IRWXU);
     filein = fopen(fpipein, "r+");
@@ -79,7 +80,7 @@ void *reader_loop(void* wojd){
     }
 
     if(VERBOSE)
-        fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout, fpipein);
+        fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout ? fpipeout : "-", fpipein);
 
     while(RUNNING){
         GtkWidget *widget;
@@ -202,8 +203,10 @@ void *reader_loop(void* wojd){
     }
 
     fclose(filein);
+    if (fpipeout) {
     fflush(fileout);
     fclose(fileout);
+    }
     pthread_exit(NULL);
 }
 
@@ -375,7 +378,7 @@ int main(int argc, char *argv[])
     gtk_widget_show(window);
 
     //starting command reader
-    if(fpipeout)
+    if (fpipein)
         pthread_create(&thread, NULL, reader_loop, NULL);
 
     gtk_main();
@@ -383,7 +386,7 @@ int main(int argc, char *argv[])
 end:
     RUNNING = 0;
 
-    if(fpipeout && thread)
+    if (fpipein && thread)
         pthread_cancel(thread);
 
     g_object_unref(G_OBJECT(builder));
