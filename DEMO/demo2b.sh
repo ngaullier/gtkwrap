@@ -11,7 +11,7 @@ GTK_WRAP="../gtk-wrap -v -f $GLADE_FILE -i $IN"
 
 
 on_button1_clicked(){
-    echo "textview3 set_textview_text $((textview1+textview2))"
+    echo "textview3 set $((textview1+textview2))"
 } > "$IN"
 
 

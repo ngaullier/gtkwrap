@@ -249,7 +249,6 @@ void *reader_loop(void* wojd){
 
     while(RUNNING){
         GObject *gobj;
-        GtkWidget *widget;
 
         if (!fgets(input, sizeof(input), filein))
             break;
@@ -280,101 +279,54 @@ void *reader_loop(void* wojd){
             fprintf(stderr, "object '%s' not found\n", object);
             break;
         }
-        widget = GTK_WIDGET(gobj);
 
-        //window set title
-        if(!strcmp(command, "set_window_title")){
-            gtk_window_set_title(GTK_WINDOW(widget), operanda);
-        } else
+        if (GTK_IS_WIDGET(gobj)) {
+            GtkWidget *widget = GTK_WIDGET(gobj);
 
-        //window show
-        if(!strcmp(command, "show")){
-            gtk_widget_show(widget);
-        } else
+            if(!strcmp(command, "show")) {
+                if (!strcmp(operanda, "true"))
+                    gtk_widget_show(widget);
+                else
+                    gtk_widget_hide(widget);
+                continue;
+            }
 
-        //window hide
-        if(!strcmp(command, "hide")){
-            gtk_widget_hide(widget);
-        } else
-
-
-        //textview set text
-        if(!strcmp(command, "set_textview_text")){
-            gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1);
-        } else
-
-        //textview get text
-        if(!strcmp(command, "get_textview_text")){
-            GtkTextIter a, b;
-            GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
-            gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
-            gtk_text_buffer_get_iter_at_offset(buffer, &b, -1);
-            gchar* mtext = gtk_text_buffer_get_text(buffer, &a, &b, FALSE);
-            fprintf(fileout, "%s\n", mtext);
-            fflush(fileout);
-        } else
-
-        //spinner activate/deactivate
-        if(!strcmp(command, "spinner_start")){
-            gtk_spinner_start(GTK_SPINNER(widget));
-        } else
-
-        if(!strcmp(command, "spinner_stop")){
-            gtk_spinner_stop(GTK_SPINNER(widget));
-        } else
-
-        //label set/get
-        if(!strcmp(command, "set_label_text")){
-            gtk_label_set_text(GTK_LABEL(widget), operanda);
-        } else
-
-        //set button label
-        if(!strcmp(command, "set_button_label")){
-            gtk_button_set_label(GTK_BUTTON(widget), operanda);
-        } else
-
-        //entrytext set/get
-        if(!strcmp(command, "get_entry_text")){
-            gchar* mtext = gtk_editable_get_chars(GTK_EDITABLE(widget), 0, -1);
-            fprintf(fileout, "%s\n", mtext);
-            fflush(fileout);
-        } else
-
-        if(!strcmp(command, "set_entry_text")){
-            gtk_entry_set_text(GTK_ENTRY(widget), operanda);
-        } else
-
-
-        //combobox add options, get/set selected
-        if(!strcmp(command, "set_combobox_items")){
-            //GtkTreeModel *tree_model;
-            //gtk_combo_box_model_set(GTK_COMBO_BOX(widget), tree_model);
-        } else
-
-        if(!strcmp(command, "get_selected_combobox_item")){
-            fprintf(fileout, "%d\n", gtk_combo_box_get_active(GTK_COMBO_BOX(widget)));
-            fflush(fileout);
-        } else
-
-        //image set image TODO doesn't work
-        if(!strcmp(command, "set_image")){
-            gtk_image_set_from_file(GTK_IMAGE(widget), operanda);
-            gtk_widget_show(widget);
-        } else
-
-        //progressbar set, show/hide
-        if(!strcmp(command, "set_progressbar")){
-        } else
-
-        //togglebutton istoggled //toggle, check, radio button
-        if(!strcmp(command, "get_button_state")){
-            if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
-                fprintf(fileout, "1\n");
-            else
-                fprintf(fileout, "0\n");
-            fflush(fileout);
+            if(!strcmp(command, "enable")){
+                gtk_widget_set_sensitive(GTK_WIDGET(gobj),
+                        strcmp(operanda, "true") ? 0 : 1);
+                continue;
+            }
         }
 
+        if(!strcmp(command, "set")){
+            if (gtk_set_text(gobj, operanda))
+                fprintf(stderr, "set: %s is not supported\n",
+                        g_type_name(G_TYPE_FROM_INSTANCE(gobj)));
+            continue;
+        }
+
+        if(!strcmp(command, "get")){
+            int ret;
+            char *out = gtk_get_text(gobj, &ret);
+
+            if (out != NULL) {
+                fprintf(fileout, out);
+            } else switch (ret) {
+                case ERR_NOT_IMPLEMENTED:
+                    fprintf(stderr, "get: %s is not supported\n",
+                            g_type_name(G_TYPE_FROM_INSTANCE(gobj)));
+                    break;
+                default:
+                    fprintf(stderr, "get: error\n");
+                    break;
+            }
+            fprintf(fileout, "\n");
+            fflush(fileout);
+            continue;
+        }
+
+        fprintf(stderr, "unexpected command: '%s'\n", command);
+        break;
     }
 
     fclose(filein);
