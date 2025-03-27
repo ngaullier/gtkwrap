@@ -9,15 +9,15 @@ GTK_WRAP="../gtk-wrap -v -f $GLADE_FILE -i $IN -o $OUT"
 
 
 on_button1_clicked(){
- 
+
     echo "textview1 get_textview_text a"
     echo "textview2 get_textview_text a"
-    read a < $OUT
-    read b < $OUT
+    read a
+    read b
     let "c = $a + $b"
     echo "textview3 set_textview_text $c"
 
-} > $IN
+} > $IN < $OUT
 
 
 $GTK_WRAP | while read line
