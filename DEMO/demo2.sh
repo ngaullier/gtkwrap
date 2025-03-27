@@ -10,12 +10,12 @@ GTK_WRAP="../gtk-wrap -v -f $GLADE_FILE -i $IN -o $OUT"
 
 on_button1_clicked(){
 
-    echo "textview1 get_textview_text a"
-    echo "textview2 get_textview_text a"
+    echo "textview1 get"
+    echo "textview2 get"
     read a
     read b
     let "c = $a + $b"
-    echo "textview3 set_textview_text $c"
+    echo "textview3 set $c"
 
 } > $IN < $OUT
 
