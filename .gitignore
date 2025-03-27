@@ -1,2 +1,4 @@
 gtk-wrap
 *.glade~
+DEMO/*.save
+

@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
+<interface>
+  <requires lib="gtk+" version="3.24"/>
+  <object class="GtkAdjustment" id="gui_scale1">
+    <property name="upper">100</property>
+    <property name="value">25</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="gui_spin1">
+    <property name="upper">100</property>
+    <property name="value">7</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
+  </object>
+  <object class="GtkWindow" id="window1">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">GTKWraper demo</property>
+    <property name="resizable">False</property>
+    <child>
+      <object class="GtkFixed">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <child>
+          <object class="GtkLabel" id="gui_label1">
+            <property name="width-request">51</property>
+            <property name="height-request">28</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">A Label</property>
+            <attributes>
+              <attribute name="background" value="#5e5e5c5c6464"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="x">10</property>
+            <property name="y">10</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkStack" id="gui_stack1">
+            <property name="width-request">440</property>
+            <property name="height-request">50</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-start">5</property>
+            <property name="margin-end">6</property>
+            <signal name="notify::visible-child" handler="refresh_button_play" swapped="no"/>
+            <child>
+              <object class="GtkFixed">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <child>
+                  <object class="GtkFileChooserButton" id="gui_file_chooser">
+                    <property name="width-request">430</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="title" translatable="yes"/>
+                    <signal name="selection-changed" handler="refresh_button_play" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="x">15</property>
+                    <property name="y">5</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="name">page1</property>
+                <property name="title" translatable="yes">File</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFixed">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="border-width">0</property>
+                <child>
+                  <object class="GtkFileChooserButton" id="gui_folder_chooser">
+                    <property name="width-request">430</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="action">select-folder</property>
+                    <property name="title" translatable="yes"/>
+                    <signal name="selection-changed" handler="refresh_button_play" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="x">15</property>
+                    <property name="y">5</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="name">page2</property>
+                <property name="title" translatable="yes">Folders</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="x">10</property>
+            <property name="y">224</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="button_play">
+            <property name="label">gtk-media-play</property>
+            <property name="width-request">76</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">True</property>
+            <property name="can-default">True</property>
+            <property name="has-default">True</property>
+            <property name="receives-default">False</property>
+            <property name="use-stock">True</property>
+            <property name="always-show-image">True</property>
+            <signal name="clicked" handler="on_button_play_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">400</property>
+            <property name="y">10</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkStackSwitcher">
+            <property name="width-request">460</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="halign">start</property>
+            <property name="valign">start</property>
+            <property name="homogeneous">True</property>
+            <property name="stack">gui_stack1</property>
+          </object>
+          <packing>
+            <property name="x">10</property>
+            <property name="y">190</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="gui_check1">
+            <property name="label" translatable="yes">option1</property>
+            <property name="width-request">64</property>
+            <property name="height-request">23</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="draw-indicator">True</property>
+          </object>
+          <packing>
+            <property name="x">230</property>
+            <property name="y">10</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBoxText" id="gui_combo1">
+            <property name="width-request">170</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="active">1</property>
+            <items>
+              <item id="10" translatable="yes">Ten</item>
+              <item id="20" translatable="yes">Twenty</item>
+              <item id="More than 20" translatable="yes">More than twenty</item>
+            </items>
+          </object>
+          <packing>
+            <property name="x">10</property>
+            <property name="y">33</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton">
+            <property name="width-request">130</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="adjustment">gui_spin1</property>
+          </object>
+          <packing>
+            <property name="x">49</property>
+            <property name="y">126</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="gui_toggle1">
+            <property name="label" translatable="yes">toggle</property>
+            <property name="width-request">73</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+          </object>
+          <packing>
+            <property name="x">320</property>
+            <property name="y">51</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="gui_radio1">
+            <property name="label" translatable="yes">main</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="active">True</property>
+            <property name="draw-indicator">True</property>
+          </object>
+          <packing>
+            <property name="x">230</property>
+            <property name="y">40</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="gui_radio2">
+            <property name="label" translatable="yes">alt</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="active">True</property>
+            <property name="draw-indicator">True</property>
+            <property name="group">gui_radio1</property>
+          </object>
+          <packing>
+            <property name="x">230</property>
+            <property name="y">60</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSearchEntry" id="gui_search1">
+            <property name="width-request">170</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="primary-icon-name">edit-find-symbolic</property>
+            <property name="primary-icon-activatable">False</property>
+            <property name="primary-icon-sensitive">False</property>
+            <property name="placeholder-text" translatable="yes">hjhkjh</property>
+          </object>
+          <packing>
+            <property name="x">10</property>
+            <property name="y">80</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScale">
+            <property name="width-request">38</property>
+            <property name="height-request">171</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="orientation">vertical</property>
+            <property name="adjustment">gui_scale1</property>
+            <property name="round-digits">1</property>
+          </object>
+          <packing>
+            <property name="x">180</property>
+            <property name="y">11</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkTextView" id="gui_textview1">
+            <property name="width-request">250</property>
+            <property name="height-request">90</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+          </object>
+          <packing>
+            <property name="x">230</property>
+            <property name="y">93</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="button_reset">
+            <property name="label">gtk-clear</property>
+            <property name="width-request">73</property>
+            <property name="height-request">34</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="use-stock">True</property>
+            <property name="always-show-image">True</property>
+            <signal name="clicked" handler="on_button_reset_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">400</property>
+            <property name="y">50</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSwitch" id="gui_switch1">
+            <property name="width-request">50</property>
+            <property name="height-request">26</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="active">True</property>
+            <signal name="state-set" handler="on_gui_switch1_state_set" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">320</property>
+            <property name="y">12</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
