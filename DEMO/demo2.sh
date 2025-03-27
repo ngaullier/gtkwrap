@@ -20,7 +20,7 @@ on_button1_clicked(){
 } > $IN
 
 
-$GTK_WRAP | while read func
+$GTK_WRAP | while read line
 do
-    $func
+    eval $line
 done
