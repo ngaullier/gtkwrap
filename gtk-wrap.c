@@ -248,10 +248,15 @@ void *reader_loop(void* wojd){
         fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout ? fpipeout : "-", fpipein);
 
     while(RUNNING){
+        GObject *gobj;
         GtkWidget *widget;
 
         if (!fgets(input, sizeof(input), filein))
             break;
+        if (input[strlen(input)-1] != '\n') {
+            fprintf(stderr, "Overly long command, exiting...\n");
+            break;
+        }
 
         if(!RUNNING)
             break;
@@ -269,8 +274,13 @@ void *reader_loop(void* wojd){
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
 
-        widget = GTK_WIDGET(gtk_builder_get_object(builder, object));
 
+        gobj = gtk_builder_get_object(builder, object);
+        if (!gobj) {
+            fprintf(stderr, "object '%s' not found\n", object);
+            break;
+        }
+        widget = GTK_WIDGET(gobj);
 
         //window set title
         if(!strcmp(command, "set_window_title")){
@@ -372,6 +382,8 @@ void *reader_loop(void* wojd){
         fflush(fileout);
         fclose(fileout);
     }
+    if (RUNNING)
+        gtk_main_quit();
     pthread_exit(NULL);
 }
 
@@ -545,7 +557,7 @@ int main(int argc, char *argv[])
     if(VERBOSE)
         fprintf(stderr, "Loading widget \"%s\" as a main window.\n", main_object);
 
-    GtkWidget *window;
+    GObject *window;
     GError *error = NULL;
 
     argv = &argv[argn];
@@ -563,7 +575,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    window = GTK_WIDGET(gtk_builder_get_object(builder, main_object));
+    window = gtk_builder_get_object(builder, main_object);
+    if (!window || !GTK_IS_WINDOW(window)) {
+        fprintf(stderr, "window '%s' not found\n", main_object);
+        g_free(error);
+        return 1;
+    }
+
 
     //Adding default closing signal
     g_signal_connect_swapped(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
@@ -572,7 +590,7 @@ int main(int argc, char *argv[])
     if ((ret = parse_glade(filename, builder)) != 0)
         goto end;
 
-    gtk_widget_show(window);
+    gtk_widget_show(GTK_WIDGET(window));
 
     //starting command reader
     if (fpipein)
@@ -591,7 +609,8 @@ end:
     if(VERBOSE)
         fprintf(stderr, "Cleaning...\n");
 
-    unlink(fpipeout);
+    if (fpipeout)
+        unlink(fpipeout);
     unlink(fpipein);
     xml_obj_free();
 
