@@ -41,6 +41,7 @@ char *fpipein = NULL;
 #define XML_OBJ_MAXCOUNT 100
 int  xml_obj_count = 0;
 char *xml_obj_name[XML_OBJ_MAXCOUNT];
+char *xml_obj_default[XML_OBJ_MAXCOUNT];
 
 /*
  * Multiline escaping
@@ -232,6 +233,21 @@ void reader_getenv() {
     }
 }
 
+/*
+ * Set gtk controls from glade file
+ * NB: support obj_name="all"
+ */
+void reader_reset(char *obj_name) {
+    int i;
+
+    for(i = 0; i < xml_obj_count; i++) {
+        if (!strcmp(obj_name, "all") || !strcmp(obj_name, xml_obj_name[i])) {
+            GObject *gobj = gtk_builder_get_object(builder, xml_obj_name[i]);
+
+            gtk_set_text(gobj, xml_obj_default[i]);
+        }
+    }
+}
 
 void *reader_loop(void* wojd){
     FILE *filein, *fileout;
@@ -291,6 +307,11 @@ void *reader_loop(void* wojd){
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
 
+        //global reset
+        if(!strcmp(command, "reset")) {
+            reader_reset(object);
+            continue;
+        }
 
         gobj = gtk_builder_get_object(builder, object);
         if (!gobj) {
@@ -374,7 +395,21 @@ void auto_get_objects(xmlXPathContextPtr glade_xml) {
     nodes = xpath_obj->nodesetval;
     count = (nodes) ? nodes->nodeNr : 0;
     for(xml_obj_count = 0; xml_obj_count < count && xml_obj_count < XML_OBJ_MAXCOUNT; xml_obj_count++) {
+        GObject *gobj;
+        char *obj_value;
+        int ret;
+
         xml_obj_name[xml_obj_count] = strndup((char *)xmlNodeGetContent(nodes->nodeTab[xml_obj_count]), STRING_SIZE);
+        gobj = gtk_builder_get_object(builder, xml_obj_name[xml_obj_count]);
+        obj_value = gtk_get_text(gobj, &ret);
+        if (obj_value) {
+            xml_obj_default[xml_obj_count] = strndup(obj_value, STRING_SIZE);
+            if (ret == 0)
+                g_free(obj_value);
+        } else {
+            xml_obj_default[xml_obj_count] = strdup("");
+        }
+
     }
 
     xmlXPathFreeObject(xpath_obj);
@@ -453,6 +488,7 @@ void xml_obj_free() {
 
     for (i = 0; i < xml_obj_count; i++) {
         free(xml_obj_name[i]);
+        free(xml_obj_default[i]);
     }
 }
 
