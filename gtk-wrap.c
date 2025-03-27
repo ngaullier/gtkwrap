@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 
-#define STRING_SIZE 128
+#define STRING_SIZE (64*1024)
 
 //"parsing" patterns for glade xml
 //do wypierdolenia!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -77,7 +77,7 @@ void *reader_loop(void* wojd){
         fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout, fpipein);
 
 
-    char input[1024];
+    char input[2*STRING_SIZE];
     char *operanda = NULL;
     char *delims_field = " \n";
     char *delims_eol = "\n";
@@ -88,7 +88,7 @@ void *reader_loop(void* wojd){
 
 
     while(RUNNING){
-        if (!fgets(input, 1024, filein))
+        if (!fgets(input, sizeof(input), filein))
             break;
 
         if(!RUNNING)
