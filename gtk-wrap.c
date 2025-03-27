@@ -499,6 +499,8 @@ int main(int argc, char *argv[])
     int argn;
     int ret = 0;
     pthread_t thread = 0;
+    GObject *window;
+    GError *error = NULL;
 
     /*
      * this initialize the library and check potential ABI mismatches
@@ -562,9 +564,6 @@ int main(int argc, char *argv[])
 
     if(VERBOSE)
         fprintf(stderr, "Loading widget \"%s\" as a main window.\n", main_object);
-
-    GObject *window;
-    GError *error = NULL;
 
     argv = &argv[argn];
     argc -= argn;
