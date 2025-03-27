@@ -196,6 +196,22 @@ void on_window_destroy(GObject *object, gpointer user_data){
 
 void signal_handler(gpointer user_data, GObject *object){
     char *jo = (char *)user_data;
+    int i;
+
+    for (i = 0; i < xml_obj_count; i++) {
+        int ret;
+        GObject *gobj = gtk_builder_get_object(builder, (char *)xml_obj_name[i]);
+        char *obj_value = gtk_get_text(gobj, &ret);
+
+        if (obj_value != NULL) {
+            fprintf(stdout, "%s=\"%s\" ", xml_obj_name[i], obj_value);
+            if (ret == 0)
+                g_free(obj_value);
+        } else {
+            fprintf(stdout, "%s= ", xml_obj_name[i]);
+        }
+    }
+
     fprintf(stdout, "%s\n", jo);
     fflush(stdout);
 }

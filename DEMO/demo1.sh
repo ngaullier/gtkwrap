@@ -17,5 +17,5 @@ on_window1_destroy(){
 
 $GTK_WRAP | while read line
 do
-    $line
+    eval $line
 done
