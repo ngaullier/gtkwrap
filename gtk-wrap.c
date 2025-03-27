@@ -217,6 +217,22 @@ void signal_handler(gpointer user_data, GObject *object){
 }
 
 
+/*
+ * Set gtk controls from shell environment variables
+ */
+void reader_getenv() {
+    int i;
+
+    for(i = 0; i < xml_obj_count; i++) {
+        GObject *gobj = gtk_builder_get_object(builder, xml_obj_name[i]);
+        char *obj_value = getenv((const char *)xml_obj_name[i]);
+
+        if (obj_value != NULL)
+            gtk_set_text(gobj, obj_value);
+    }
+}
+
+
 void *reader_loop(void* wojd){
     FILE *filein, *fileout;
     char input[2*STRING_SIZE];
@@ -246,6 +262,8 @@ void *reader_loop(void* wojd){
 
     if(VERBOSE)
         fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout ? fpipeout : "-", fpipein);
+
+    reader_getenv();
 
     while(RUNNING){
         GObject *gobj;
