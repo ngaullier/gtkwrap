@@ -34,6 +34,13 @@ char *fpipeout = NULL;
 char *fpipein = NULL;
 
 
+/*
+ * List of GObjects detected in the glade file that are
+ * supported by gtk_get_text()/gtk_set_text() below.
+ */
+#define XML_OBJ_MAXCOUNT 100
+int  xml_obj_count = 0;
+char *xml_obj_name[XML_OBJ_MAXCOUNT];
 
 /*
  * Multiline escaping
@@ -352,6 +359,29 @@ void *reader_loop(void* wojd){
     pthread_exit(NULL);
 }
 
+/*
+ * Parse glade file to get the list of GObjects
+ * that can be handled through gtk_get_text()/gtk_set_text() above.
+ */
+void auto_get_objects(xmlXPathContextPtr glade_xml) {
+    xmlXPathObjectPtr xpath_obj;
+    xmlNodeSetPtr nodes;
+    int count;
+
+    xpath_obj = xmlXPathEvalExpression((const xmlChar *)"//object[contains('"
+            GTK_GETSET_TEXT_IMPLEMENTED
+            "',@class)]/@id", glade_xml);
+    assert(xpath_obj != NULL);
+
+    nodes = xpath_obj->nodesetval;
+    count = (nodes) ? nodes->nodeNr : 0;
+    for(xml_obj_count = 0; xml_obj_count < count && xml_obj_count < XML_OBJ_MAXCOUNT; xml_obj_count++) {
+        xml_obj_name[xml_obj_count] = strndup((char *)xmlNodeGetContent(nodes->nodeTab[xml_obj_count]), STRING_SIZE);
+    }
+
+    xmlXPathFreeObject(xpath_obj);
+}
+
 //Adding signals handled in glade file
 void auto_add_signals(xmlXPathContextPtr glade_xml) {
     xmlXPathObjectPtr xpath_obj;
@@ -396,6 +426,7 @@ int parse_glade(const char *filename, GtkBuilder *builder) {
         return 1;
     }
 
+    auto_get_objects(glade_xml);
     auto_add_signals(glade_xml);
 
     xmlXPathFreeContext(glade_xml);
@@ -417,6 +448,14 @@ void usage(){
     , appname);
 
     exit(1);
+}
+
+void xml_obj_free() {
+    int i;
+
+    for (i = 0; i < xml_obj_count; i++) {
+        free(xml_obj_name[i]);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -538,6 +577,7 @@ end:
 
     unlink(fpipeout);
     unlink(fpipein);
+    xml_obj_free();
 
     return ret;
 }
