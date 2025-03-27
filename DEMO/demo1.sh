@@ -15,7 +15,7 @@ on_window1_destroy(){
     echo window destroyed
 }
 
-$GTK_WRAP | while read line
+$GTK_WRAP | while read -r line
 do
-    eval $line
+    eval "$line"
 done

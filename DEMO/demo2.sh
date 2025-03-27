@@ -12,15 +12,15 @@ on_button1_clicked(){
 
     echo "textview1 get"
     echo "textview2 get"
-    read a
-    read b
-    let "c = $a + $b"
+    read -r a
+    read -r b
+    c=$((a + b))
     echo "textview3 set $c"
 
-} > $IN < $OUT
+} > "$IN" < "$OUT"
 
 
-$GTK_WRAP | while read line
+$GTK_WRAP | while read -r line
 do
-    eval $line
+    eval "$line"
 done
