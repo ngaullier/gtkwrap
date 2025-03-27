@@ -53,9 +53,18 @@ void signal_handler(gpointer user_data, GObject *object){
 
 
 void *reader_loop(void* wojd){
+    FILE *filein, *fileout;
+    char input[2*STRING_SIZE];
+    char *delims_field = " \n";
+    char *delims_eol = "\n";
+    char *next_token;
+    char *undefined = "";
+    char *object;
+    char *command;
+    char *operanda;
 
     mkfifo(fpipeout, S_IRWXU);
-    FILE *fileout = fopen(fpipeout, "a+");
+    fileout = fopen(fpipeout, "a+");
     if(!fileout){
         fprintf(stderr, "Error opening pipe %s !\n", fpipeout);
         pthread_exit(NULL);
@@ -63,7 +72,7 @@ void *reader_loop(void* wojd){
 
 
     mkfifo(fpipein, S_IRWXU);
-    FILE *filein = fopen(fpipein, "r+");
+    filein = fopen(fpipein, "r+");
     if(!filein){
         fprintf(stderr, "Error opening pipe %s !\n", fpipein);
         pthread_exit(NULL);
@@ -72,18 +81,9 @@ void *reader_loop(void* wojd){
     if(VERBOSE)
         fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout, fpipein);
 
-
-    char input[2*STRING_SIZE];
-    char *operanda = NULL;
-    char *delims_field = " \n";
-    char *delims_eol = "\n";
-    char *next_token;
-    char *undefined = "";
-    char *object = NULL;
-    char *command = NULL;
-
-
     while(RUNNING){
+        GtkWidget *widget;
+
         if (!fgets(input, sizeof(input), filein))
             break;
 
@@ -103,7 +103,7 @@ void *reader_loop(void* wojd){
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
 
-        GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(builder, object));
+        widget = GTK_WIDGET(gtk_builder_get_object(builder, object));
 
 
         //window set title
