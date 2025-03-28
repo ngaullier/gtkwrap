@@ -307,6 +307,10 @@ void *reader_loop(void* wojd){
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
 
+        if(!strcmp(command, "exit")) {
+            break;
+        }
+
         //global reset
         if(!strcmp(command, "reset")) {
             reader_reset(object);
