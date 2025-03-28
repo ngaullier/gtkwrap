@@ -20,7 +20,7 @@ EXAMPLE 1:
    
       ./gtk_wrap -f a.glade | while read line
       do
-        $line
+        eval $line
       done
    ```
 
@@ -35,16 +35,33 @@ Simple calculator
      #!/bin/bash
    
      on_button1_clicked(){
-        echo "textview1 get_textview_text" > inpipe
-        echo "textview2 get_textview_text" > inpipe
-        read a < outpipe
-        read b < outpipe
-        let "c = $a + $b"
-        echo "textview3 set_textview_text $c" > inpipe
-     }
+        echo "textview1 get"
+        echo "textview2 get"
+        read a
+        read b
+        c=$((a + b))
+        echo "textview3 set $c"
+     } > inpipe < outpipe
    
-     ./gtk_wrap -f b.glade -i inpipe -o outpipe | while read func
+     ./gtk_wrap -f b.glade -i inpipe -o outpipe | while read line
      do
-        $func
+        eval $line
      done
    ```
+
+or, simplified using automatic variable assignment feature:
+
+```shell
+  #!/bin/bash
+
+  on_button1_clicked(){
+     echo "textview3 set $((textview1+textview2))"
+  } > inpipe
+
+  ./gtk_wrap -f b.glade -i inpipe | while read line
+  do
+     eval $line
+  done
+```
+
+Full examples including glade files included in the [DEMO](DEMO) folder.
