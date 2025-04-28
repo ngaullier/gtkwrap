@@ -3,6 +3,32 @@ gtkwrap
 
 GTK gui in bash.
 
+## Build / Install
+
+### prerequisites
+
+`sudo apt-get install libgtk-3-dev libxml2-dev`
+
+### make
+
+`make all strip`
+
+### build debian package
+
+`fpm` is required, see [Installation &mdash; fpm - packaging made simple 1.9.0 documentation](https://fpm.readthedocs.io/en/latest/installation.html)
+
+`git` is used for the versionning, `dpkg-dev` for dependencies analysis, and `lintian` is recommanded for final checking.
+
+`sudo apt-get install git dpkg-dev lintian`
+
+`make deb`
+
+### install package
+
+`sudo apt-get install ./gtk-wrap-*`  
+
+## Usage
+
 Create Your gui in Glade(GtkBuilder) and use it in your shell scripts.
 
 EXAMPLE 1:
