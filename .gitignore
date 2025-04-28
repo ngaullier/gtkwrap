@@ -2,3 +2,4 @@ gtk-wrap
 *.glade~
 DEMO/*.save
 
+*.deb
