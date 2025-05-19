@@ -26,10 +26,10 @@ LINTIAN_IGNORE=dir-in-usr-local,file-in-usr-local,no-copyright-file,debian-chang
 deb:	all strip
 
 ifeq (, $(shell which dpkg-shlibdeps))
-$(error "dpkg-shlibdeps is required, consider doing apt-get install dpkg-dev")
+	$(error "dpkg-shlibdeps is required, consider doing apt-get install dpkg-dev")
 endif
 ifeq (, $(shell which fpm))
-$(error "fpm is required, please check https://fpm.readthedocs.io/en/latest/installation.html")
+	$(error "fpm is required, please check https://fpm.readthedocs.io/en/latest/installation.html")
 endif
 	fpm -f \
   -s dir -t ${PACKAGE_TYPE} \
