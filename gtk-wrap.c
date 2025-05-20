@@ -75,6 +75,11 @@ void eol_unescape(char *str)
 // And if ret_code == 1, returned string is a const char *.
 char *gtk_get_text(GObject *gobj, int *ret_code) {
     if (GTK_IS_TEXT_VIEW(gobj)) {
+        if (gtk_text_view_get_input_purpose(GTK_TEXT_VIEW(gobj)) == GTK_INPUT_PURPOSE_TERMINAL)
+        {
+            *ret_code = 1;
+            return "";
+        }
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(gobj));
         GtkTextIter start, end;
         char *ret;
@@ -134,10 +139,54 @@ char *gtk_get_text(GObject *gobj, int *ret_code) {
     return NULL;
 }
 
+/*
+ * Read a text file entirely.
+ * Ensures \0 termination.
+ * Returned buffer must be freed.
+ * Returns NULL on error.
+ */
+static char *read_entire_txt_file(const char *input)
+{
+    FILE *fp = fopen(input, "rb");
+    long size;
+    char *ret;
+
+    if (!fp)
+        return NULL;
+    if (fseek(fp, 0, SEEK_END))
+        return NULL;
+    size = ftell(fp);
+    if (size < 0)
+        return NULL;
+    if (fseek(fp, 0, SEEK_SET))
+        return NULL;
+    ret = malloc(size + 1);
+    if (!ret)
+        return NULL;
+    if (fread(ret, 1, size, fp) != size) {
+        free(ret);
+        return NULL;
+    }
+    ret[size] = 0;
+    return ret;
+}
+
 int gtk_set_text(GObject *gobj, char *text) {
     if (GTK_IS_TEXT_VIEW(gobj)) {
-        eol_unescape(text);
-        gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(gobj)), text, -1);
+        if (gtk_text_view_get_input_purpose(GTK_TEXT_VIEW(gobj)) == GTK_INPUT_PURPOSE_TERMINAL
+            && strlen(text)) {
+            char *content = read_entire_txt_file(text);
+            if (content) {
+                gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(gobj)), content, -1);
+                free(content);
+            } else {
+                gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(gobj)), "", -1);
+            }
+        }
+        else {
+            eol_unescape(text);
+            gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(gobj)), text, -1);
+        }
     }
     else if (GTK_IS_ADJUSTMENT(gobj)) /* SpinButton/Scale */ {
         gtk_adjustment_set_value(GTK_ADJUSTMENT(gobj), atof(text));
