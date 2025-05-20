@@ -528,6 +528,7 @@ void usage(){
         "Options:\n"
         "-f project.glade\n"
         "-m OBJECTNAME \t\t Set object as a main window. Default \"window1\".\n"
+        "-s project.css \t\t Set a global style sheet.\n"
         "-v \t\t\t Be more verbose.\n"
         "-i INPIPENAME \t\t Use pipe for commands instead of standard input.\n"
         "-o OUTPIPE \t\t Use pipe for commands output.\n"
@@ -548,6 +549,7 @@ void xml_obj_free() {
 int main(int argc, char *argv[])
 {
     char *filename = NULL;
+    char *cssfilename = NULL;
     char *main_object = (char*)"window1";
     int argn;
     int ret = 0;
@@ -595,6 +597,15 @@ int main(int argc, char *argv[])
                         fpipein = argv[++argn];
                     continue;
 
+                //stylesheet (css) to apply globally
+                case 's':
+                    if(cssfilename != NULL)
+                        usage();
+
+                    if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
+                        cssfilename = argv[++argn];
+                    continue;
+
                 //read ui from GtkBuilder(Glade) file
                 case 'f':
                     if(filename != NULL)
@@ -622,6 +633,21 @@ int main(int argc, char *argv[])
     argc -= argn;
 
     gtk_init(&argc, &argv);
+
+    if (cssfilename) {
+        GtkCssProvider *GlobalCssProvider = gtk_css_provider_new ();
+        gtk_css_provider_load_from_path(GlobalCssProvider, cssfilename, &error);
+        if (error) {
+            fprintf(stderr, "Error occured while loading CSS!\n");
+            fprintf(stderr, "Message: %s\n", error->message);
+            g_free(error);
+            return 1;
+        }
+        gtk_style_context_add_provider_for_screen(
+                gdk_screen_get_default (),
+                (GtkStyleProvider *)GlobalCssProvider,
+                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
 
     builder = gtk_builder_new();
 
