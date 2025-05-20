@@ -1,0 +1,7 @@
+.stdout text {
+  color: black;
+  background-color: #aaaaaa;
+}
+.stdout {
+  font: 8px "Monospace";
+}

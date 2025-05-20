@@ -298,6 +298,9 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="input-purpose">terminal</property>
+                <style>
+                  <class name="stdout"/>
+                </style>
               </object>
             </child>
           </object>
