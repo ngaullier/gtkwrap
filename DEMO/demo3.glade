@@ -257,11 +257,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTextView" id="gui_textview1">
+          <object class="GtkTextView" id="textview1">
             <property name="width-request">250</property>
             <property name="height-request">90</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
+            <property name="input-purpose">terminal</property>
           </object>
           <packing>
             <property name="x">230</property>
