@@ -59,6 +59,8 @@ on_button_reset_clicked() {
 }
 
 on_button_play_clicked() {
+    local tmp_txt
+    tmp_txt=/tmp/demo.txt
 
     printf "\nFlags: "
     for gobj in "switch1" "toggle1" "check1" "radio1" "radio2"
@@ -71,16 +73,13 @@ on_button_play_clicked() {
         eval "echo $gobj=\${gui_$gobj:-undefined}"
     done
 
-    gui_textview1+="|appended-line"
-    gui_cmd "gui_textview1" set "${gui_textview1}"
-
-
     if [[ ${gui_stack1} == "page1" ]];
     then
-        gui_cmd "window1" set "file=${gui_file_chooser}"
+        ls -l "${gui_file_chooser}" > "${tmp_txt}"
     else
-        gui_cmd "window1" set "folder=${gui_folder_chooser}"
+        ls -l "${gui_folder_chooser}" > "${tmp_txt}"
     fi
+    gui_cmd "textview1" set "${tmp_txt}"
 
     gui_state_save
 }
