@@ -257,19 +257,6 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTextView" id="textview1">
-            <property name="width-request">250</property>
-            <property name="height-request">90</property>
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="input-purpose">terminal</property>
-          </object>
-          <packing>
-            <property name="x">230</property>
-            <property name="y">93</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkButton" id="button_reset">
             <property name="label">gtk-clear</property>
             <property name="width-request">73</property>
@@ -298,6 +285,25 @@
           <packing>
             <property name="x">320</property>
             <property name="y">12</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="width-request">250</property>
+            <property name="height-request">90</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <child>
+              <object class="GtkTextView" id="textview1">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="input-purpose">terminal</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="x">230</property>
+            <property name="y">93</property>
           </packing>
         </child>
       </object>
