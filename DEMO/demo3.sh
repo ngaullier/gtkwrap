@@ -11,13 +11,14 @@ script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 glade_file="${script_dir}/${script_id}.glade"
 glade_env="${script_dir}/${script_id}.save"
+glade_css="${script_dir}/${script_id}.css"
 glade_prefix="gui_"
 
 gtkwrap_bin="${script_dir}/../gtk-wrap"
 gtkwrap_cmd="/tmp/${0}.${$}.in"
 
 main() {
-    "${gtkwrap_bin}" -i "${gtkwrap_cmd}" -f "${glade_file}" |
+    "${gtkwrap_bin}" -i "${gtkwrap_cmd}" -f "${glade_file}" -s "${glade_css}" |
     while read -r line
     do
         eval "$line"
