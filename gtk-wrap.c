@@ -356,7 +356,7 @@ void *reader_loop(void* wojd){
         if(VERBOSE)
             fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
 
-        if(!strcmp(command, "exit")) {
+        if(!strcmp(object, "exit")) {
             break;
         }
 
