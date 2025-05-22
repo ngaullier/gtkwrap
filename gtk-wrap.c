@@ -63,10 +63,10 @@ void eol_unescape(char *str)
  * Generic get_text/set_text for easy management of gtk controls/displays
  */
 #define GTK_GETSET_TEXT_IMPLEMENTED \
-        " GtkTextView GtkAdjustment GtkFileChooserButton" \
-        " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack" \
-        " GtkComboBox GtkComboBoxText" \
-        " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton" \
+        " GtkTextView GtkAdjustment GtkFileChooserButton \n" \
+        " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack \n" \
+        " GtkComboBox GtkComboBoxText \n" \
+        " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
         ""
 #define ERR_NO_MEM -2
 #define ERR_NOT_IMPLEMENTED -3
@@ -532,6 +532,20 @@ void usage(){
         "-v \t\t\t Be more verbose.\n"
         "-i INPIPENAME \t\t Use pipe for commands instead of standard input.\n"
         "-o OUTPIPE \t\t Use pipe for commands output.\n"
+        "\n"
+        "Commands:\n"
+        "  exit\n"
+        "  <id>|all reset: restore state from glade source file\n"
+        "  <id> show true|false: show/hide a widget\n"
+        "  <id> enable true|false: set widget sensitive yes/no\n"
+        "  <id> set|get <text>: set/get value\n"
+        "    For booleans (Buttons etc.), use 'true' 'false'.\n"
+        "    For floats (GtkAdjustment), use '%%.2f'.\n"
+        "    Supported for:" GTK_GETSET_TEXT_IMPLEMENTED
+        "  For multiline support in GtkTextView, '\\n' is escaped to '|'.\n"
+        "  Moreover, in case of a 'terminal' input-purpose, <text> is the\n"
+        "  fullpath of a text file to read content from.\n"
+
     , appname);
 
     exit(1);
