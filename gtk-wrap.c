@@ -388,6 +388,11 @@ void *reader_loop(void* wojd){
                         strcmp(operanda, "true") ? 0 : 1);
                 continue;
             }
+
+            if(!strcmp(command, "name")){
+                gtk_widget_set_name(GTK_WIDGET(gobj), operanda);
+                continue;
+            }
         }
 
         if(!strcmp(command, "set")){
@@ -538,6 +543,7 @@ void usage(){
         "  <id>|all reset: restore state from glade source file\n"
         "  <id> show true|false: show/hide a widget\n"
         "  <id> enable true|false: set widget sensitive yes/no\n"
+        "  <id> name <name>: set widget name (usefull with css)\n"
         "  <id> set|get <text>: set/get value\n"
         "    For booleans (Buttons etc.), use 'true' 'false'.\n"
         "    For floats (GtkAdjustment), use '%%.2f'.\n"
