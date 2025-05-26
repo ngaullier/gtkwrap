@@ -4,7 +4,7 @@ CFLAGS=-g -ggdb -Wall
 GTKWRAP_BIN=gtk-wrap
 
 all:
-	${CC} ${CFLAGS} gtk-wrap.c -o ${GTKWRAP_BIN} ${LDFLAGS}
+	${CC} ${CFLAGS} commands.c gtk-wrap.c -o ${GTKWRAP_BIN} ${LDFLAGS}
 
 clean:
 	rm ${GTKWRAP_BIN}
