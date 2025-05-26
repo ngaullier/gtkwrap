@@ -5,3 +5,12 @@
 .stdout {
   font: 8px "Monospace";
 }
+
+#file {
+  background-color: white;
+  color: black;
+}
+#folder {
+  background-color: #ee0000;
+  color: #005555;
+}

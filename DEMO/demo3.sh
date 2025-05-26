@@ -57,6 +57,7 @@ on_gui_switch1_state_set() {
 }
 on_button_reset_clicked() {
     gui_cmd "all" reset
+    gui_cmd "window1" name ""
 }
 
 on_button_play_clicked() {
@@ -77,8 +78,10 @@ on_button_play_clicked() {
     if [[ ${gui_stack1} == "page1" ]];
     then
         ls -l "${gui_file_chooser}" > "${tmp_txt}"
+        gui_cmd "window1" name file
     else
         ls -l "${gui_folder_chooser}" > "${tmp_txt}"
+        gui_cmd "window1" name folder
     fi
     gui_cmd "textview1" set "${tmp_txt}"
 
