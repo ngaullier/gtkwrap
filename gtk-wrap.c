@@ -10,19 +10,17 @@
  *****************************************************************************/
 
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
-#include <gtk/gtk.h>
 #include <unistd.h>
 #include <assert.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+
+#include "gtk-wrap.h"
 
 #define STRING_SIZE (64*1024)
 
@@ -38,7 +36,6 @@ char *fpipein = NULL;
  * List of GObjects detected in the glade file that are
  * supported by gtk_get_text()/gtk_set_text() below.
  */
-#define XML_OBJ_MAXCOUNT 100
 int  xml_obj_count = 0;
 char *xml_obj_name[XML_OBJ_MAXCOUNT];
 char *xml_obj_default[XML_OBJ_MAXCOUNT];
@@ -68,9 +65,8 @@ void eol_unescape(char *str)
         " GtkComboBox GtkComboBoxText \n" \
         " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
         ""
-#define ERR_NO_MEM -2
-#define ERR_NOT_IMPLEMENTED -3
 // If returning NULL, ret is an error ret_code < 0.
+// Possible error codes: ERR_NO_MEM, ERR_NOT_IMPLEMENTED
 // Otherwise, if ret_code == 0, returned string must be g_freed.
 // And if ret_code == 1, returned string is a const char *.
 char *gtk_get_text(GObject *gobj, int *ret_code) {
@@ -282,32 +278,11 @@ void reader_getenv() {
     }
 }
 
-/*
- * Set gtk controls from glade file
- * NB: support obj_name="all"
- */
-void reader_reset(char *obj_name) {
-    int i;
-
-    for(i = 0; i < xml_obj_count; i++) {
-        if (!strcmp(obj_name, "all") || !strcmp(obj_name, xml_obj_name[i])) {
-            GObject *gobj = gtk_builder_get_object(builder, xml_obj_name[i]);
-
-            gtk_set_text(gobj, xml_obj_default[i]);
-        }
-    }
-}
 
 void *reader_loop(void* wojd){
     FILE *filein, *fileout;
-    char input[2*STRING_SIZE];
-    char *delims_field = " \n";
-    char *delims_eol = "\n";
-    char *next_token;
-    char *undefined = "";
-    char *object;
-    char *command;
-    char *operanda;
+    char input[2*STRING_SIZE] = "";
+    struct gtkwrap_command_args *args;
 
     if (fpipeout) {
         mkfifo(fpipeout, S_IRWXU);
@@ -331,8 +306,6 @@ void *reader_loop(void* wojd){
     reader_getenv();
 
     while(RUNNING){
-        GObject *gobj;
-
         if (!fgets(input, sizeof(input), filein))
             break;
         if (input[strlen(input)-1] != '\n') {
@@ -343,87 +316,12 @@ void *reader_loop(void* wojd){
         if(!RUNNING)
             break;
 
-        if (!(object = strtok_r(input, delims_field, &next_token))) {
-            object = command = operanda = undefined;
-        } else {
-            if (!(command = strtok_r(NULL, delims_field, &next_token))) {
-                command = operanda = undefined;
-            } else {
-                if (!(operanda = strtok_r(NULL, delims_eol, &next_token)))
-                    operanda = undefined;
-            }
-        }
-        if(VERBOSE)
-            fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
-
-        if(!strcmp(object, "exit")) {
-            break;
-        }
-
-        //global reset
-        if(!strcmp(command, "reset")) {
-            reader_reset(object);
-            continue;
-        }
-
-        gobj = gtk_builder_get_object(builder, object);
-        if (!gobj) {
-            fprintf(stderr, "object '%s' not found\n", object);
-            break;
-        }
-
-        if (GTK_IS_WIDGET(gobj)) {
-            GtkWidget *widget = GTK_WIDGET(gobj);
-
-            if(!strcmp(command, "show")) {
-                if (!strcmp(operanda, "true"))
-                    gtk_widget_show(widget);
-                else
-                    gtk_widget_hide(widget);
-                continue;
-            }
-
-            if(!strcmp(command, "enable")){
-                gtk_widget_set_sensitive(GTK_WIDGET(gobj),
-                        strcmp(operanda, "true") ? 0 : 1);
-                continue;
-            }
-
-            if(!strcmp(command, "name")){
-                gtk_widget_set_name(GTK_WIDGET(gobj), operanda);
-                continue;
-            }
-        }
-
-        if(!strcmp(command, "set")){
-            if (gtk_set_text(gobj, operanda))
-                fprintf(stderr, "set: %s is not supported\n",
-                        g_type_name(G_TYPE_FROM_INSTANCE(gobj)));
-            continue;
-        }
-
-        if(!strcmp(command, "get")){
-            int ret;
-            char *out = gtk_get_text(gobj, &ret);
-
-            if (out != NULL) {
-                fprintf(fileout, out);
-            } else switch (ret) {
-                case ERR_NOT_IMPLEMENTED:
-                    fprintf(stderr, "get: %s is not supported\n",
-                            g_type_name(G_TYPE_FROM_INSTANCE(gobj)));
-                    break;
-                default:
-                    fprintf(stderr, "get: error\n");
-                    break;
-            }
-            fprintf(fileout, "\n");
-            fflush(fileout);
-            continue;
-        }
-
-        fprintf(stderr, "unexpected command: '%s'\n", command);
-        break;
+        args = g_slice_alloc(sizeof(*args));
+        args->fileout = fileout;
+        args->VERBOSE = VERBOSE;
+        args->input = g_malloc(strlen(input) + 1);
+        strcpy(args->input, input);
+        g_idle_add_once(gtkwrap_command, args);
     }
 
     fclose(filein);
