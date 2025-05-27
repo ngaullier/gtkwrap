@@ -2,4 +2,8 @@ gtk-wrap
 *.glade~
 DEMO/*.save
 
+.project
+.cproject
+.settings
+
 *.deb
