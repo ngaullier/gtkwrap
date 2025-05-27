@@ -14,8 +14,8 @@ glade_env="${script_dir}/${script_id}.save"
 glade_css="${script_dir}/${script_id}.css"
 glade_prefix="gui_"
 
-gtkwrap_bin="${script_dir}/../gtk-wrap"
-gtkwrap_cmd="/tmp/${0}.${$}.in"
+gtkwrap_bin="gtk-wrap"
+gtkwrap_cmd="/tmp/${script_name}.${$}.in"
 
 main() {
     "${gtkwrap_bin}" -i "${gtkwrap_cmd}" -f "${glade_file}" -s "${glade_css}" |

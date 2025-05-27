@@ -1,12 +1,21 @@
 #!/bin/bash
 
-GLADE_FILE="demo2.glade"
+script_name=$(basename "${0}")
+script_id="${script_name%.*}"
+script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-IN="/tmp/${0}.${$}.in"
-OUT="/tmp/${0}.${$}.out"
+glade_file="${script_dir}/${script_id}.glade"
+gtkwrap_bin="gtk-wrap"
+gtkwrap_cmd="/tmp/${script_name}.${$}.in"
+gtkwrap_out="/tmp/${script_name}.${$}.out"
 
-GTK_WRAP="../gtk-wrap -v -f $GLADE_FILE -i $IN -o $OUT"
-
+main() {
+    "${gtkwrap_bin}" -v -i "${gtkwrap_cmd}" -o "${gtkwrap_out}" -f "${glade_file}" |
+    while read -r line
+    do
+        eval "$line"
+    done
+}
 
 on_button1_clicked(){
 
@@ -17,10 +26,6 @@ on_button1_clicked(){
     c=$((a + b))
     echo "textview3 set $c"
 
-} > "$IN" < "$OUT"
+} > "${gtkwrap_cmd}" < "${gtkwrap_out}"
 
-
-$GTK_WRAP | while read -r line
-do
-    eval "$line"
-done
+main
