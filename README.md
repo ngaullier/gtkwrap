@@ -9,9 +9,15 @@ GTK gui in bash.
 
 `sudo apt-get install libgtk-3-dev libxml2-dev`
 
-### make
+
+
+### build and install locally
 
 `make all strip`
+
+When not using the debian package to install (see below), a typical local install can be achieved very simply like this:
+
+`sudo ln -fs $(pwd)/gtk-wrap /usr/local/bin/gtk-wrap`
 
 ### build debian package
 
@@ -22,10 +28,6 @@ GTK gui in bash.
 `sudo apt-get install git dpkg-dev lintian`
 
 `make deb`
-
-### install package
-
-`sudo apt-get install ./gtk-wrap-*`  
 
 ## Usage
 
@@ -44,7 +46,7 @@ EXAMPLE 1:
         #do something on button clicked signal
       }
    
-      ./gtk_wrap -f a.glade | while read line
+      gtk_wrap -f a.glade | while read line
       do
         eval $line
       done
@@ -69,7 +71,7 @@ Simple calculator
         echo "textview3 set $c"
      } > inpipe < outpipe
    
-     ./gtk_wrap -f b.glade -i inpipe -o outpipe | while read line
+     gtk_wrap -f b.glade -i inpipe -o outpipe | while read line
      do
         eval $line
      done
@@ -84,7 +86,7 @@ or, simplified using automatic variable assignment feature:
      echo "textview3 set $((textview1+textview2))"
   } > inpipe
 
-  ./gtk_wrap -f b.glade -i inpipe | while read line
+  gtk_wrap -f b.glade -i inpipe | while read line
   do
      eval $line
   done
