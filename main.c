@@ -218,6 +218,7 @@ int main(int argc, char *argv[])
 
     if(!filename)
         usage();
+    g_set_prgname(g_path_get_basename(filename));
 
     if(VERBOSE)
         fprintf(stderr, "Loading widget \"%s\" as a main window.\n", main_object);
