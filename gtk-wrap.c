@@ -3,6 +3,7 @@
  *      gtk-wrap                                                              *
  *                                                                            *
  *      Author: Michal Jamry                                                  *
+ *              Nicolas Gaullier                                              *
  *                                                                            *
  *      License: LGPL                                                         *
  *                                                                            *
@@ -10,66 +11,36 @@
  *****************************************************************************/
 
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <assert.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
-#include <libxml/xpathInternals.h>
-
 #include "gtk-wrap.h"
 
-#define STRING_SIZE (64*1024)
-
-short VERBOSE = 0;
-short RUNNING = 1;
-char *appname;
-GtkBuilder *builder;
-char *fpipeout = NULL;
-char *fpipein = NULL;
-
-
-/*
- * List of GObjects detected in the glade file that are
- * supported by gtk_get_text()/gtk_set_text() below.
- */
-int  xml_obj_count = 0;
-char *xml_obj_name[XML_OBJ_MAXCOUNT];
-char *xml_obj_default[XML_OBJ_MAXCOUNT];
-
-/*
+/* ----------------------------------------------
  * Multiline escaping
  * for easy handling in shell variables
  */
 #define EOL_ESCAPE_CHAR '|'
-void eol_escape(char *str)
+static void eol_escape(char *str)
 {
     while((str = strchr(str, '\n')) != NULL)
         *(str++) = EOL_ESCAPE_CHAR;
 }
-void eol_unescape(char *str)
+static void eol_unescape(char *str)
 {
     while((str = strchr(str, EOL_ESCAPE_CHAR)) != NULL)
         *(str++) = '\n';
 }
 
-/*
- * Generic get_text/set_text for easy management of gtk controls/displays
+
+/* ----------------------------------------------
+ * Generic get_text/set_text for easy management
+ * of gtk controls/displays
  */
-#define GTK_GETSET_TEXT_IMPLEMENTED \
-        " GtkTextView GtkAdjustment GtkFileChooserButton \n" \
-        " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack \n" \
-        " GtkComboBox GtkComboBoxText \n" \
-        " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
-        " GtkCheckMenuItem \n" \
-        ""
-// If returning NULL, ret is an error ret_code < 0.
-// Possible error codes: ERR_NO_MEM, ERR_NOT_IMPLEMENTED
-// Otherwise, if ret_code == 0, returned string must be g_freed.
-// And if ret_code == 1, returned string is a const char *.
+
+/*
+ * If returning NULL, ret is an error ret_code < 0.
+ * Possible error codes: ERR_NO_MEM, ERR_NOT_IMPLEMENTED
+ * Otherwise, if ret_code == 0, returned string must be g_freed.
+ * And if ret_code == 1, returned string is a const char *.
+ */
 char *gtk_get_text(GObject *gobj, int *ret_code) {
     if (GTK_IS_TEXT_VIEW(gobj)) {
         if (gtk_text_view_get_input_purpose(GTK_TEXT_VIEW(gobj)) == GTK_INPUT_PURPOSE_TERMINAL)
@@ -231,397 +202,4 @@ int gtk_set_text(GObject *gobj, char *text) {
     else
         return ERR_NOT_IMPLEMENTED;
     return 0;
-}
-
-
-/* ----------------------------------------------
- * Signal handlers
- */
-void on_window_destroy(GObject *object, gpointer user_data){
-    if(VERBOSE)
-        fprintf(stderr, "Caught destroy signal from main widget!\n"
-                        "Quitting...\n");
-
-    RUNNING = 0;
-    gtk_main_quit();
-}
-
-
-void signal_handler(gpointer user_data, GObject *object){
-    char *jo = (char *)user_data;
-    int i;
-
-    for (i = 0; i < xml_obj_count; i++) {
-        int ret;
-        GObject *gobj = gtk_builder_get_object(builder, (char *)xml_obj_name[i]);
-        char *obj_value = gtk_get_text(gobj, &ret);
-
-        if (obj_value != NULL) {
-            fprintf(stdout, "%s=\"%s\" ", xml_obj_name[i], obj_value);
-            if (ret == 0)
-                g_free(obj_value);
-        } else {
-            fprintf(stdout, "%s= ", xml_obj_name[i]);
-        }
-    }
-
-    fprintf(stdout, "%s\n", jo);
-    fflush(stdout);
-}
-
-
-/*
- * Set gtk controls from shell environment variables
- */
-void reader_getenv() {
-    int i;
-
-    for(i = 0; i < xml_obj_count; i++) {
-        GObject *gobj = gtk_builder_get_object(builder, xml_obj_name[i]);
-        char *obj_value = getenv((const char *)xml_obj_name[i]);
-
-        if (obj_value != NULL)
-            gtk_set_text(gobj, obj_value);
-    }
-}
-
-
-void *reader_loop(void* wojd){
-    FILE *filein, *fileout;
-    char input[2*STRING_SIZE] = "";
-    struct gtkwrap_command_args *args;
-
-    if (fpipeout) {
-        mkfifo(fpipeout, S_IRWXU);
-        fileout = fopen(fpipeout, "a+");
-        if(!fileout){
-            fprintf(stderr, "Error opening pipe %s !\n", fpipeout);
-            pthread_exit(NULL);
-        }
-    } else fileout = stdout;
-
-    mkfifo(fpipein, S_IRWXU);
-    filein = fopen(fpipein, "r+");
-    if(!filein){
-        fprintf(stderr, "Error opening pipe %s !\n", fpipein);
-        pthread_exit(NULL);
-    }
-
-    if(VERBOSE)
-        fprintf(stderr, "Using pipes out:%s in:%s\n", fpipeout ? fpipeout : "-", fpipein);
-
-    reader_getenv();
-
-    while(RUNNING){
-        if (!fgets(input, sizeof(input), filein))
-            break;
-        if (input[strlen(input)-1] != '\n') {
-            fprintf(stderr, "Overly long command, exiting...\n");
-            break;
-        }
-
-        if(!RUNNING)
-            break;
-
-        args = g_slice_alloc(sizeof(*args));
-        args->fileout = fileout;
-        args->VERBOSE = VERBOSE;
-        args->input = g_malloc(strlen(input) + 1);
-        strcpy(args->input, input);
-        g_idle_add_once(gtkwrap_command, args);
-    }
-
-    fclose(filein);
-    if (fpipeout) {
-        fflush(fileout);
-        fclose(fileout);
-    }
-    if (RUNNING)
-        gtk_main_quit();
-    pthread_exit(NULL);
-}
-
-/*
- * Parse glade file to get the list of GObjects
- * that can be handled through gtk_get_text()/gtk_set_text() above.
- */
-void auto_get_objects(xmlXPathContextPtr glade_xml) {
-    xmlXPathObjectPtr xpath_obj;
-    xmlNodeSetPtr nodes;
-    int count;
-
-    xpath_obj = xmlXPathEvalExpression((const xmlChar *)"//object[contains('"
-            GTK_GETSET_TEXT_IMPLEMENTED
-            "',@class)]/@id", glade_xml);
-    assert(xpath_obj != NULL);
-
-    nodes = xpath_obj->nodesetval;
-    count = (nodes) ? nodes->nodeNr : 0;
-    for(xml_obj_count = 0; xml_obj_count < count && xml_obj_count < XML_OBJ_MAXCOUNT; xml_obj_count++) {
-        GObject *gobj;
-        char *obj_value;
-        int ret;
-
-        xml_obj_name[xml_obj_count] = strndup((char *)xmlNodeGetContent(nodes->nodeTab[xml_obj_count]), STRING_SIZE);
-        gobj = gtk_builder_get_object(builder, xml_obj_name[xml_obj_count]);
-        obj_value = gtk_get_text(gobj, &ret);
-        if (obj_value) {
-            xml_obj_default[xml_obj_count] = strndup(obj_value, STRING_SIZE);
-            if (ret == 0)
-                g_free(obj_value);
-        } else {
-            xml_obj_default[xml_obj_count] = strdup("");
-        }
-
-    }
-
-    xmlXPathFreeObject(xpath_obj);
-}
-
-//Adding signals handled in glade file
-void auto_add_signals(xmlXPathContextPtr glade_xml) {
-    xmlXPathObjectPtr xpath_obj;
-    xmlNodeSetPtr nodes;
-    int i, count;
-
-    xpath_obj = xmlXPathEvalExpression((const xmlChar *)"//object[@id]/signal[@handler][@name]", glade_xml);
-    assert(xpath_obj != NULL);
-
-    nodes = xpath_obj->nodesetval;
-    count = (nodes) ? nodes->nodeNr : 0;
-    for(i = 0; i < count; i++) {
-        xmlNodePtr node_signal = nodes->nodeTab[i];
-        xmlNodePtr node_object = nodes->nodeTab[i]->parent;
-        char *objname = (char *)xmlGetProp(node_object, (const xmlChar *)"id");
-        char *signame = (char *)xmlGetProp(node_signal, (const xmlChar *)"name");
-        char *sighandler = (char *)xmlGetProp(node_signal, (const xmlChar *)"handler");
-        assert(objname != NULL && signame != NULL && sighandler != NULL);
-        if (VERBOSE)
-            fprintf(stderr, "Found signal \"%s\", handled by \"%s\" in object \"%s\"\n", signame, sighandler, objname);
-        GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object( builder, objname));
-        g_signal_connect_swapped(widget, signame, G_CALLBACK(signal_handler), sighandler);
-    }
-
-    xmlXPathFreeObject(xpath_obj);
-}
-
-
-int parse_glade(const char *filename) {
-    xmlDocPtr glade_file;
-    xmlXPathContextPtr glade_xml;
-
-    glade_file = xmlReadFile(filename, NULL, 0);
-    if (!glade_file) {
-        fprintf(stderr, "Failed to parse %s\n", filename);
-        return 1;
-    }
-
-    glade_xml = xmlXPathNewContext(glade_file);
-    if (!glade_xml) {
-        xmlFreeDoc(glade_file);
-        return 1;
-    }
-
-    auto_get_objects(glade_xml);
-    auto_add_signals(glade_xml);
-
-    xmlXPathFreeContext(glade_xml);
-    xmlFreeDoc(glade_file);
-    return 0;
-}
-
-void usage(){
-    fprintf(stderr,
-        "Usage:\n"
-        "%s \n"
-        "\n"
-        "Options:\n"
-        "-f project.glade\n"
-        "-m OBJECTNAME \t\t Set object as a main window. Default \"window1\".\n"
-        "-s project.css \t\t Set a global style sheet.\n"
-        "-v \t\t\t Be more verbose.\n"
-        "-i INPIPENAME \t\t Use pipe for commands instead of standard input.\n"
-        "-o OUTPIPE \t\t Use pipe for commands output.\n"
-        "\n"
-        "Commands:\n"
-        "  exit\n"
-        "  <id>|all reset: restore state from glade source file\n"
-        "  <id> show true|false: show/hide a widget\n"
-        "  <id> enable true|false: set widget sensitive yes/no\n"
-        "  <id> name <name>: set widget name (usefull with css)\n"
-        "  <id> set|get <text>: set/get value\n"
-        "    For booleans (Buttons etc.), use 'true' 'false'.\n"
-        "    For floats (GtkAdjustment), use '%%.2f'.\n"
-        "    Supported for:" GTK_GETSET_TEXT_IMPLEMENTED
-        "  For multiline support in GtkTextView, '\\n' is escaped to '|'.\n"
-        "  Moreover, in case of a 'terminal' input-purpose, <text> is the\n"
-        "  fullpath of a text file to read content from.\n"
-
-    , appname);
-
-    exit(1);
-}
-
-void xml_obj_free() {
-    int i;
-
-    for (i = 0; i < xml_obj_count; i++) {
-        free(xml_obj_name[i]);
-        free(xml_obj_default[i]);
-    }
-}
-
-int main(int argc, char *argv[])
-{
-    char *filename = NULL;
-    char *cssfilename = NULL;
-    char *main_object = (char*)"window1";
-    int argn;
-    int ret = 0;
-    pthread_t thread = 0;
-    GObject *window;
-    GError *error = NULL;
-
-    /*
-     * this initialize the library and check potential ABI mismatches
-     * between the version it was compiled for and the actual shared
-     * library used.
-     */
-    LIBXML_TEST_VERSION
-
-    appname = argv[0];
-
-    for (argn = 1; argn < argc; argn++)
-    {
-        if(strlen(argv[argn]) < 2 )
-            continue;
-
-        if(argv[argn][0] == '-'){
-            switch(argv[argn][1]){
-
-                //load object as a main widget, default window1
-                case 'm' :
-                    if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
-                        main_object = argv[++argn];
-                    continue;
-
-                //verbose
-                case 'v':
-                    VERBOSE = 1;
-                    continue;
-
-                //command output pipe
-                case 'o':
-                    if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
-                        fpipeout = argv[++argn];
-                    continue;
-
-                //command input pipe
-                case 'i':
-                    if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
-                        fpipein = argv[++argn];
-                    continue;
-
-                //stylesheet (css) to apply globally
-                case 's':
-                    if(cssfilename != NULL)
-                        usage();
-
-                    if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
-                        cssfilename = argv[++argn];
-                    continue;
-
-                //read ui from GtkBuilder(Glade) file
-                case 'f':
-                    if(filename != NULL)
-                        usage();
-
-                    if((argc - argn) > 0 && strlen(argv[argn+1]) > 0)
-                        filename = argv[++argn];
-                    continue;
-
-                default:
-                    usage();
-                    break;
-            }
-        }
-        break;
-    }
-
-    if(!filename)
-        usage();
-
-    if(VERBOSE)
-        fprintf(stderr, "Loading widget \"%s\" as a main window.\n", main_object);
-
-    argv = &argv[argn];
-    argc -= argn;
-
-    gtk_init(&argc, &argv);
-
-    if (cssfilename) {
-        GtkCssProvider *GlobalCssProvider = gtk_css_provider_new ();
-        gtk_css_provider_load_from_path(GlobalCssProvider, cssfilename, &error);
-        if (error) {
-            fprintf(stderr, "Error occured while loading CSS!\n");
-            fprintf(stderr, "Message: %s\n", error->message);
-            g_free(error);
-            return 1;
-        }
-        gtk_style_context_add_provider_for_screen(
-                gdk_screen_get_default (),
-                (GtkStyleProvider *)GlobalCssProvider,
-                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    }
-
-    builder = gtk_builder_new();
-
-    if (!gtk_builder_add_from_file(builder, filename, &error))
-    {
-        fprintf(stderr, "Error occured while loading UI!\n");
-        fprintf(stderr, "Message: %s\n", error->message);
-        g_free(error);
-        return 1;
-    }
-
-    window = gtk_builder_get_object(builder, main_object);
-    if (!window || !GTK_IS_WINDOW(window)) {
-        fprintf(stderr, "window '%s' not found\n", main_object);
-        g_free(error);
-        return 1;
-    }
-
-
-    //Adding default closing signal
-    g_signal_connect_swapped(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
-
-    //Adding other signals
-    if ((ret = parse_glade(filename)) != 0)
-        goto end;
-
-    gtk_widget_show(GTK_WIDGET(window));
-
-    //starting command reader
-    if (fpipein)
-        pthread_create(&thread, NULL, reader_loop, NULL);
-
-    gtk_main();
-
-end:
-    RUNNING = 0;
-
-    if (fpipein && thread)
-        pthread_cancel(thread);
-
-    g_object_unref(G_OBJECT(builder));
-
-    if(VERBOSE)
-        fprintf(stderr, "Cleaning...\n");
-
-    if (fpipeout)
-        unlink(fpipeout);
-    unlink(fpipein);
-    xml_obj_free();
-
-    return ret;
 }
