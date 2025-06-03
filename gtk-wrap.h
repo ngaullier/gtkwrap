@@ -15,10 +15,20 @@
 #include <string.h>
 #include <gtk/gtk.h>
 
+#define STRING_SIZE (64*1024)
+
 #define ERR_NO_MEM -2
 #define ERR_NOT_IMPLEMENTED -3
 
 #define XML_OBJ_MAXCOUNT 100
+
+#define GTK_GETSET_TEXT_IMPLEMENTED \
+        " GtkTextView GtkAdjustment GtkFileChooserButton \n" \
+        " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack \n" \
+        " GtkComboBox GtkComboBoxText \n" \
+        " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
+        " GtkCheckMenuItem \n" \
+        ""
 
 /*
  * For use by g_idle_add
@@ -26,22 +36,23 @@
  * https://stackoverflow.com/questions/20695068/how-to-pass-multiple-arguments-through-g-idle-add#20696225
  */
 struct gtkwrap_command_args {
-    //int *request;
     char *input;
     FILE *fileout;
     int VERBOSE;
 };
 
-/* from gtk-wrap.c */
-extern short RUNNING;
+
+/* from glade.c */
+extern GtkBuilder *builder;
 extern int  xml_obj_count;
 extern char *xml_obj_name[XML_OBJ_MAXCOUNT];
 extern char *xml_obj_default[XML_OBJ_MAXCOUNT];
-extern GtkBuilder *builder;
+extern void xml_obj_free();
+extern int parse_glade(const char *filename, int doVerbose);
 
+/* from gtk-wrap.c */
 extern char *gtk_get_text(GObject *gobj, int *ret_code);
 extern int gtk_set_text(GObject *gobj, char *text);
-
 
 /* from commands.c */
 extern void gtkwrap_command(gpointer data);
