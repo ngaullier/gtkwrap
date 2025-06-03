@@ -64,6 +64,7 @@ void eol_unescape(char *str)
         " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack \n" \
         " GtkComboBox GtkComboBoxText \n" \
         " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
+        " GtkCheckMenuItem \n" \
         ""
 // If returning NULL, ret is an error ret_code < 0.
 // Possible error codes: ERR_NO_MEM, ERR_NOT_IMPLEMENTED
@@ -129,6 +130,9 @@ char *gtk_get_text(GObject *gobj, int *ret_code) {
     }
     else if (GTK_IS_SWITCH(gobj)) {
         return gtk_switch_get_active(GTK_SWITCH(gobj)) ? "true" : "false";
+    }
+    else if (GTK_IS_CHECK_MENU_ITEM(gobj)) {
+        return gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(gobj)) ? "true" : "false";
     }
 
     *ret_code = ERR_NOT_IMPLEMENTED;
@@ -220,6 +224,9 @@ int gtk_set_text(GObject *gobj, char *text) {
     }
     else if (GTK_IS_SWITCH(gobj)) {
         gtk_switch_set_active(GTK_SWITCH(gobj), strcmp(text, "true") ? 0 : 1);
+    }
+    else if (GTK_IS_CHECK_MENU_ITEM(gobj)) {
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gobj), strcmp(text, "true") ? 0 : 1);
     }
     else
         return ERR_NOT_IMPLEMENTED;
