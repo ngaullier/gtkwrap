@@ -119,8 +119,9 @@ static void auto_add_signals(xmlXPathContextPtr glade_xml, int doVerbose) {
         assert(objname != NULL && signame != NULL && sighandler != NULL);
         if (doVerbose)
             fprintf(stderr, "Found signal \"%s\", handled by \"%s\" in object \"%s\"\n", signame, sighandler, objname);
-        GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object( builder, objname));
-        g_signal_connect_swapped(widget, signame, G_CALLBACK(signal_handler), sighandler);
+        g_signal_connect_swapped(
+                gtk_builder_get_object( builder, objname),
+                signame, G_CALLBACK(signal_handler), sighandler);
     }
 
     xmlXPathFreeObject(xpath_obj);
