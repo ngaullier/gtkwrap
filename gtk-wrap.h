@@ -50,6 +50,12 @@ extern char *xml_obj_default[XML_OBJ_MAXCOUNT];
 extern void xml_obj_free();
 extern int parse_glade(const char *filename, int doVerbose);
 
+/* from gtk-timecode */
+extern void gtk_timecode_tag_field_separator(GtkTextBuffer *text_buffer);
+extern void gtk_timecode_valid(GtkTextBuffer *text_buffer, int cursor_move);
+extern void signal_handler_timecode_changed(gpointer data, GObject *text_buffer);
+extern void signal_handler_timecode_move_cursor(gpointer user_data, GObject *text_view, int cursor_move);
+
 /* from gtk-wrap.c */
 extern char *gtk_get_text(GObject *gobj, int *ret_code);
 extern int gtk_set_text(GObject *gobj, char *text);
