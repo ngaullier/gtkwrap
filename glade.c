@@ -127,6 +127,48 @@ static void auto_add_signals(xmlXPathContextPtr glade_xml, int doVerbose) {
     xmlXPathFreeObject(xpath_obj);
 }
 
+/* ----------------------------------------------
+ * auto_set_timecode
+ * =======================
+ * Parse glade file to get the list of GtkTextBuffers representing a Timecode
+ * And initialize them.
+ * Note: they are identified by their parent's style class being 'timecode'.
+ */
+static void auto_set_timecode(xmlXPathContextPtr glade_xml, int doVerbose) {
+    xmlXPathObjectPtr xpath_obj;
+    xmlNodeSetPtr nodes;
+    int i, count;
+
+    xpath_obj = xmlXPathEvalExpression((const xmlChar *)
+            "//object[@class='GtkTextView'][@id][style/class[@name='timecode']]/property[@name='buffer']"
+            , glade_xml);
+    assert(xpath_obj != NULL);
+
+    nodes = xpath_obj->nodesetval;
+    count = (nodes) ? nodes->nodeNr : 0;
+    for(i = 0; i < count; i++) {
+        xmlNodePtr node_property = nodes->nodeTab[i];
+        xmlNodePtr node_object = nodes->nodeTab[i]->parent;
+        char *textbuff_id = (char *)xmlNodeGetContent(node_property);
+        char *textview_id = (char *)xmlGetProp(node_object, (const xmlChar *)"id");
+        assert(textbuff_id != NULL && textview_id != NULL);
+        if (doVerbose)
+            fprintf(stderr, "Set signals for timecode handling in \"%s/%s\"\n", textview_id, textbuff_id);
+        GtkTextBuffer *textbuff = GTK_TEXT_BUFFER(gtk_builder_get_object(builder, textbuff_id));
+        GtkTextView *textview = GTK_TEXT_VIEW(gtk_builder_get_object(builder, textview_id));
+        g_signal_connect_swapped(
+                textbuff,
+                "changed", G_CALLBACK(signal_handler_timecode_changed), NULL);
+        g_signal_connect_swapped(
+                textview,
+                "move-cursor", G_CALLBACK(signal_handler_timecode_move_cursor), textbuff_id);
+        gtk_timecode_valid(textbuff, 0);
+        gtk_timecode_tag_field_separator(textbuff);
+    }
+
+    xmlXPathFreeObject(xpath_obj);
+}
+
 
 int parse_glade(const char *filename, int doVerbose) {
     xmlDocPtr glade_file;
@@ -146,6 +188,7 @@ int parse_glade(const char *filename, int doVerbose) {
 
     auto_get_objects(glade_xml);
     auto_add_signals(glade_xml, doVerbose);
+    auto_set_timecode(glade_xml, doVerbose);
 
     xmlXPathFreeContext(glade_xml);
     xmlFreeDoc(glade_file);
