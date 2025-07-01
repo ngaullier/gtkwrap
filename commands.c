@@ -28,6 +28,15 @@ static void command_reset(char *obj_name) {
     }
 }
 
+// https://stackoverflow.com/questions/1575278/function-to-split-a-filepath-into-path-and-file
+void split_path_file(char** p, char** f, char *pf) {
+    char *slash = pf, *next;
+    while ((next = strpbrk(slash + 1, "\\/"))) slash = next;
+    if (pf != slash) slash++;
+    *p = strndup(pf, slash - pf);
+    *f = strdup(slash);
+}
+
 /*
  * Parse and run a line of a command.
  * To be run by main GTK Thread (though g_idle_add_once)
@@ -125,6 +134,49 @@ void gtkwrap_command(gpointer data) {
         fprintf(fileout, "\n");
         fflush(fileout);
         goto exit;
+    }
+
+    if (GTK_IS_DIALOG(gobj)) {
+        if (!strcmp(command, "run")) {
+            gint gtk_response;
+
+            if (GTK_IS_FILE_CHOOSER(gobj)) {
+                GtkFileChooser *chooser = GTK_FILE_CHOOSER(gobj);
+                char *current_name = gtk_file_chooser_get_current_name(chooser);
+
+                if (!strlen(current_name)) {
+                    char *current_folder = gtk_file_chooser_get_current_folder(chooser);
+                    char *default_folder, *default_name;
+
+                    split_path_file(&default_folder, &default_name, operanda);
+                    if (!current_folder)
+                        gtk_file_chooser_set_current_folder(chooser, default_folder);
+                    else {
+                        gtk_file_chooser_set_current_folder(chooser, current_folder);
+                        g_free(current_folder);
+                    }
+                    gtk_file_chooser_set_current_name(chooser, default_name);
+
+                    g_free(default_folder);
+                    g_free(default_name);
+                } else {
+                    char *filename = gtk_file_chooser_get_filename(chooser);
+
+                    gtk_file_chooser_set_filename(chooser, filename);
+                    g_free(filename);
+                }
+                g_free(current_name);
+            }
+
+            gtk_response = gtk_dialog_run(GTK_DIALOG(gobj));
+            if (GTK_IS_FILE_CHOOSER(gobj)) {
+                if (gtk_response != GTK_RESPONSE_ACCEPT)
+                    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(gobj), "");
+            }
+            gtk_widget_hide(GTK_WIDGET(gobj));
+
+            goto exit;
+        }
     }
 
     fprintf(stderr, "unexpected command: '%s'\n", command);

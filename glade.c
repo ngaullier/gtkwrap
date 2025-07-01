@@ -170,6 +170,47 @@ static void auto_set_timecode(xmlXPathContextPtr glade_xml, int doVerbose) {
 }
 
 
+/* ----------------------------------------------
+ * auto_set_filechooser
+ * =======================
+ * When the action is 'save' (ie. GTK_FILE_CHOOSER_ACTION_SAVE),
+ * add two buttons to close the dialog: Cancel/Save.
+ * NOTE: The glade UI allows only 'open', so 'save' has to be written by hand.
+ */
+static void auto_set_filechooser(xmlXPathContextPtr glade_xml, int doVerbose) {
+    xmlXPathObjectPtr xpath_obj;
+    xmlNodeSetPtr nodes;
+    int i, count;
+
+    xpath_obj = xmlXPathEvalExpression((const xmlChar *)
+            "//object[@class='GtkFileChooserDialog'][property[@name='action']='save']/@id"
+            , glade_xml);
+    assert(xpath_obj != NULL);
+
+    nodes = xpath_obj->nodesetval;
+    count = (nodes) ? nodes->nodeNr : 0;
+    for(i = 0; i < count; i++) {
+        char *filechooser_id = (char *)xmlNodeGetContent(nodes->nodeTab[i]);
+        GObject *gobj = gtk_builder_get_object(builder, filechooser_id);
+
+        /*
+         * GTK-Warning 'Failed to measure available space' can arise but can be ignored.
+         * The warning disappear once the dialog has been properly resized.
+         * See https://gitlab.gnome.org/GNOME/gtk/-/issues/2509
+         * forwarded to https://gitlab.gnome.org/GNOME/gtk/-/issues/4891 (still open)
+         */
+        if (doVerbose)
+            fprintf(stderr, "Found filechooser/filesave \"%s\"\n", filechooser_id);
+        gtk_dialog_add_buttons(GTK_DIALOG(gobj),
+                "_Cancel",  GTK_RESPONSE_CANCEL,
+                "_Save",    GTK_RESPONSE_ACCEPT,
+                NULL);
+    }
+
+    xmlXPathFreeObject(xpath_obj);
+}
+
+
 int parse_glade(const char *filename, int doVerbose) {
     xmlDocPtr glade_file;
     xmlXPathContextPtr glade_xml;
@@ -189,6 +230,7 @@ int parse_glade(const char *filename, int doVerbose) {
     auto_get_objects(glade_xml);
     auto_add_signals(glade_xml, doVerbose);
     auto_set_timecode(glade_xml, doVerbose);
+    auto_set_filechooser(glade_xml, doVerbose);
 
     xmlXPathFreeContext(glade_xml);
     xmlFreeDoc(glade_file);
