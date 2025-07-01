@@ -70,14 +70,8 @@ char *gtk_get_text(GObject *gobj, int *ret_code) {
         return ret;
     }
     else if (GTK_IS_FILE_CHOOSER(gobj)) {
-        GtkFileChooser *chooser = GTK_FILE_CHOOSER(gobj);
-        GtkFileChooserAction chooser_type = gtk_file_chooser_get_action(chooser);
         *ret_code = 0;
-        if (chooser_type == GTK_FILE_CHOOSER_ACTION_SAVE
-        ||  chooser_type == GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER)
-            return gtk_file_chooser_get_current_name(chooser);
-        else
-            return gtk_file_chooser_get_filename(chooser);
+        return gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(gobj));
     }
 
     *ret_code = 1;
@@ -163,16 +157,27 @@ int gtk_set_text(GObject *gobj, char *text) {
         gtk_adjustment_set_value(GTK_ADJUSTMENT(gobj), atof(text));
     }
     else if (GTK_IS_FILE_CHOOSER(gobj)) {
+        GtkFileChooser *chooser = GTK_FILE_CHOOSER(gobj);
+
         if (!strcmp(text, "")) {
-            gtk_file_chooser_unselect_all(GTK_FILE_CHOOSER(gobj));
+            gtk_file_chooser_unselect_all(chooser);
         } else {
-            GtkFileChooser *chooser = GTK_FILE_CHOOSER(gobj);
             GtkFileChooserAction chooser_type = gtk_file_chooser_get_action(chooser);
-            if (chooser_type == GTK_FILE_CHOOSER_ACTION_SAVE ||
-                chooser_type == GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER)
-                gtk_file_chooser_set_current_name(chooser, text);
-            else
-                gtk_file_chooser_set_filename(chooser, text);
+
+            /* For GTK_FILE_CHOOSER_ACTION_SAVE, we want to recall
+             * the directory but not the filename, thus:
+             * - if the file does not exist: we do NOT need
+             * to call gtk_file_chooser_set_current_name().
+             * - if the file exists, the current_name will still be set,
+             * so it is required to explicitly unset it.
+             *
+             * Note: the current_name HAS to be set in order for the filechooser
+             * to take the folder into account, but we will set it lately,
+             * just before running the dialog, with an explicit user-defined value.
+             */
+            gtk_file_chooser_set_filename(chooser, text);
+            if (chooser_type == GTK_FILE_CHOOSER_ACTION_SAVE)
+                gtk_file_chooser_set_current_name(chooser, "");
         }
     }
     else if (GTK_IS_WINDOW(gobj)) {

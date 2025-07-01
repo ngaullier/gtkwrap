@@ -23,7 +23,7 @@
 #define XML_OBJ_MAXCOUNT 100
 
 #define GTK_GETSET_TEXT_IMPLEMENTED \
-        " GtkTextView GtkAdjustment GtkFileChooserButton \n" \
+        " GtkTextView GtkAdjustment GtkFileChooserButton GtkFileChooserDialog \n" \
         " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack \n" \
         " GtkComboBox GtkComboBoxText \n" \
         " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
