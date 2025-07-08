@@ -52,6 +52,13 @@ static void signal_handler(gpointer user_data, GObject *object)
         } else {
             fprintf(stdout, "%s= ", xml_obj_name[i]);
         }
+
+        if (GTK_IS_WIDGET(gobj)) {
+            if (!gtk_widget_is_sensitive(GTK_WIDGET(gobj))
+                    || !gtk_widget_is_visible(GTK_WIDGET(gobj))) {
+                fprintf(stdout, "%s_disabled=true ", xml_obj_name[i]);
+            }
+        }
     }
 
     fprintf(stdout, "%s\n", jo);
