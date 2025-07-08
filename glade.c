@@ -77,7 +77,7 @@ static void auto_get_objects(xmlXPathContextPtr glade_xml) {
 
     xpath_obj = xmlXPathEvalExpression((const xmlChar *)"//object[contains('"
             GTK_GETSET_TEXT_IMPLEMENTED
-            "',@class)]/@id", glade_xml);
+            "',@class)][not(starts-with(@id,'_'))]/@id", glade_xml);
     assert(xpath_obj != NULL);
 
     nodes = xpath_obj->nodesetval;
