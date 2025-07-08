@@ -109,6 +109,13 @@ void gtkwrap_command(gpointer data) {
         }
     }
 
+    if (!strcmp(command, "label")) {
+        if (gtk_set_label(gobj, operanda))
+            fprintf(stderr, "label: %s is not supported\n",
+                    g_type_name(G_TYPE_FROM_INSTANCE(gobj)));
+        goto exit;
+    }
+
     if (!strcmp(command, "set")) {
         if (gtk_set_text(gobj, operanda))
             fprintf(stderr, "set: %s is not supported\n",

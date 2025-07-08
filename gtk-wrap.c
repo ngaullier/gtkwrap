@@ -208,3 +208,15 @@ int gtk_set_text(GObject *gobj, char *text) {
         return ERR_NOT_IMPLEMENTED;
     return 0;
 }
+
+int gtk_set_label(GObject *gobj, char *text) {
+    if (GTK_IS_LABEL(gobj)) {
+        gtk_label_set_label(GTK_LABEL(gobj), text);
+    }
+    else if (GTK_IS_BUTTON(gobj)) {
+        gtk_button_set_label(GTK_BUTTON(gobj), text);
+    }
+    else
+        return ERR_NOT_IMPLEMENTED;
+    return 0;
+}
