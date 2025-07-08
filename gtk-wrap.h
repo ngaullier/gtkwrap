@@ -30,6 +30,9 @@
         " GtkCheckMenuItem \n" \
         ""
 
+#define BOOL2STR(X) ((X) ? "true" : "false")
+#define STR2BOOL(X) (!strcmp(X, "true") ? 1 : 0)
+
 /*
  * For use by g_idle_add
  *

@@ -91,13 +91,13 @@ char *gtk_get_text(GObject *gobj, int *ret_code) {
         return (char *)gtk_combo_box_get_active_id(GTK_COMBO_BOX(gobj));
     }
     else if (GTK_IS_TOGGLE_BUTTON(gobj)) /* Toggle/Check/Radio-Button */ {
-        return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gobj)) ? "true" : "false";
+        return BOOL2STR(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gobj)));
     }
     else if (GTK_IS_SWITCH(gobj)) {
-        return gtk_switch_get_active(GTK_SWITCH(gobj)) ? "true" : "false";
+        return BOOL2STR(gtk_switch_get_active(GTK_SWITCH(gobj)));
     }
     else if (GTK_IS_CHECK_MENU_ITEM(gobj)) {
-        return gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(gobj)) ? "true" : "false";
+        return BOOL2STR(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(gobj)));
     }
 
     *ret_code = ERR_NOT_IMPLEMENTED;
@@ -196,13 +196,13 @@ int gtk_set_text(GObject *gobj, char *text) {
         gtk_combo_box_set_active_id(GTK_COMBO_BOX(gobj), text);
     }
     else if (GTK_IS_TOGGLE_BUTTON(gobj)) /* Toggle/Check/Radio-Button */ {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gobj), strcmp(text, "true") ? 0 : 1);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gobj), STR2BOOL(text));
     }
     else if (GTK_IS_SWITCH(gobj)) {
-        gtk_switch_set_active(GTK_SWITCH(gobj), strcmp(text, "true") ? 0 : 1);
+        gtk_switch_set_active(GTK_SWITCH(gobj), STR2BOOL(text));
     }
     else if (GTK_IS_CHECK_MENU_ITEM(gobj)) {
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gobj), strcmp(text, "true") ? 0 : 1);
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gobj), STR2BOOL(text));
     }
     else
         return ERR_NOT_IMPLEMENTED;
