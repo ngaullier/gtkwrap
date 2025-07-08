@@ -59,6 +59,7 @@ extern void signal_handler_timecode_move_cursor(gpointer user_data, GObject *tex
 /* from gtk-wrap.c */
 extern char *gtk_get_text(GObject *gobj, int *ret_code);
 extern int gtk_set_text(GObject *gobj, char *text);
+extern int gtk_set_label(GObject *gobj, char *text);
 
 /* from commands.c */
 extern void gtkwrap_command(gpointer data);
