@@ -90,7 +90,7 @@ void gtkwrap_command(gpointer data) {
         GtkWidget *widget = GTK_WIDGET(gobj);
 
         if(!strcmp(command, "show")) {
-            if (!strcmp(operanda, "true"))
+            if (STR2BOOL(operanda))
                 gtk_widget_show(widget);
             else
                 gtk_widget_hide(widget);
@@ -98,8 +98,7 @@ void gtkwrap_command(gpointer data) {
         }
 
         if (!strcmp(command, "enable")) {
-            gtk_widget_set_sensitive(GTK_WIDGET(gobj),
-                    strcmp(operanda, "true") ? 0 : 1);
+            gtk_widget_set_sensitive(GTK_WIDGET(gobj), STR2BOOL(operanda));
             goto exit;
         }
 
