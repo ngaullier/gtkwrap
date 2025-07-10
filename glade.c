@@ -59,6 +59,13 @@ static void signal_handler(gpointer user_data, GObject *object)
                 fprintf(stdout, "%s_disabled=true ", xml_obj_name[i]);
             }
         }
+
+        if (GTK_IS_FILE_CHOOSER(gobj)) {
+            GtkFileChooser *file_chooser = GTK_FILE_CHOOSER(gobj);
+            if (gtk_file_chooser_get_preview_widget_active(file_chooser))
+                fprintf(stdout, "%s_preview=\"%s\" ", xml_obj_name[i],
+                        gtk_file_chooser_get_preview_filename(file_chooser));
+        }
     }
 
     fprintf(stdout, "%s\n", jo);
