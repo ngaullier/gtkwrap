@@ -142,6 +142,19 @@ void gtkwrap_command(gpointer data) {
         goto exit;
     }
 
+    if (GTK_IS_FILE_CHOOSER(gobj)) {
+        GtkFileChooser *chooser = GTK_FILE_CHOOSER(gobj);
+
+        if (!strcmp(command, "preview_active")) {
+            /*
+             * ISSUE: When activating the preview, no "update-preview" signal is sent,
+             * so the user has to select a new file to make the preview actually refresh.
+             */
+            gtk_file_chooser_set_preview_widget_active(chooser, STR2BOOL(operanda));
+            goto exit;
+        }
+    }
+
     if (GTK_IS_DIALOG(gobj)) {
         if (!strcmp(command, "run")) {
             gint gtk_response;
