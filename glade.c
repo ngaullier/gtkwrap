@@ -53,12 +53,10 @@ static void signal_handler(gpointer user_data, GObject *object)
             fprintf(stdout, "%s= ", xml_obj_name[i]);
         }
 
-        if (GTK_IS_WIDGET(gobj)) {
-            if (!gtk_widget_is_sensitive(GTK_WIDGET(gobj))
-                    || !gtk_widget_is_visible(GTK_WIDGET(gobj))) {
-                fprintf(stdout, "%s_disabled=true ", xml_obj_name[i]);
-            }
-        }
+        if (GTK_IS_WIDGET(gobj))
+            fprintf(stdout, "isenabled_%s=%s ", xml_obj_name[i],
+                    gtk_widget_is_sensitive(GTK_WIDGET(gobj)) && gtk_widget_is_visible(GTK_WIDGET(gobj)) ? "true" : "false"
+            );
 
         if (GTK_IS_FILE_CHOOSER(gobj)) {
             GtkFileChooser *file_chooser = GTK_FILE_CHOOSER(gobj);
