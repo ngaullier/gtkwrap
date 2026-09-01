@@ -22,11 +22,17 @@
 
 #define XML_OBJ_MAXCOUNT 100
 
+/*
+ * These controls will be automatically detected in the glade file and some
+ * automatic behaviour will apply (ex: initialization from environment variables if they exist).
+ * GtkAdjustment is supported by get/set_text but not listed here as it is
+ * rather an underlying layer of another "visible"/"enabled" GtkWidget (ex: GtkSpinButton).
+ */
 #define GTK_GETSET_TEXT_IMPLEMENTED \
-        " GtkTextView GtkAdjustment GtkFileChooserButton GtkFileChooserDialog \n" \
+        " GtkTextView GtkFileChooserButton GtkFileChooserDialog \n" \
         " GtkWindow GtkEntry GtkSearchEntry GtkLabel GtkStack \n" \
         " GtkComboBox GtkComboBoxText \n" \
-        " GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
+        " GtkSpinButton GtkToggleButton GtkCheckButton GtkRadioButton GtkSwitch GtkButton \n" \
         " GtkCheckMenuItem \n" \
         ""
 

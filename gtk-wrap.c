@@ -90,6 +90,9 @@ char *gtk_get_text(GObject *gobj, int *ret_code) {
     else if (GTK_IS_COMBO_BOX(gobj)) /* ComboBox/ComboBoxText */ {
         return (char *)gtk_combo_box_get_active_id(GTK_COMBO_BOX(gobj));
     }
+    else if (GTK_IS_SPIN_BUTTON(gobj)) {
+        return gtk_get_text((GObject *)gtk_spin_button_get_adjustment((GtkSpinButton *)gobj), ret_code);
+    }
     else if (GTK_IS_TOGGLE_BUTTON(gobj)) /* Toggle/Check/Radio-Button */ {
         return BOOL2STR(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gobj)));
     }
@@ -194,6 +197,9 @@ int gtk_set_text(GObject *gobj, char *text) {
     }
     else if (GTK_IS_COMBO_BOX(gobj)) /* ComboBox/ComboBoxText */ {
         gtk_combo_box_set_active_id(GTK_COMBO_BOX(gobj), text);
+    }
+    else if (GTK_IS_SPIN_BUTTON(gobj)) {
+        gtk_set_text((GObject *)gtk_spin_button_get_adjustment((GtkSpinButton *)gobj), text);
     }
     else if (GTK_IS_TOGGLE_BUTTON(gobj)) /* Toggle/Check/Radio-Button */ {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gobj), STR2BOOL(text));
